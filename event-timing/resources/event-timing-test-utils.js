@@ -246,7 +246,7 @@ async function testEventType(t, eventType, looseCount=false) {
       let entry = null;
       if (!looseCount) {
         entry = eventTypeEntries[0];
-        assert_equals(eventTypeEntries.length, 1);
+        assert_equals(eventTypeEntries.length, 1, 'Should see exactly one entry');
       } else {
         // The other events could also be considered slow. Find the one with the correct
         // target.
