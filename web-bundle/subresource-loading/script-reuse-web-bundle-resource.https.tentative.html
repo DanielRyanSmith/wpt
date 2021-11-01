@@ -110,6 +110,42 @@
 
     promise_test(async (t) => {
       t.add_cleanup(cleanUp);
+      clearWebBundleFetchCount();
+      script1 = createScriptWebBundle1();
+      await addElementAndWaitForLoad(script1);
+      clearWebBundleFetchCount();
+
+      // Remove script1, then append script2
+      // script2 should reuse webbundle resources.
+      // And it should also fire a load event.
+      script1.remove();
+      script2 = createScriptWebBundle2();
+      await addElementAndWaitForLoad(script2);
+
+      await assertResource1CanNotBeFetched();
+      await assertResource2CanBeFetched();
+      assert_equals(webBundleFetchCount(), 0);
+    }, "'remove(), then append()' should reuse webbundle resources and both scripts should fire load events");
+
+    promise_test(async (t) => {
+      t.add_cleanup(cleanUp);
+      clearWebBundleFetchCount();
+      script1 = createWebBundleElement("nonexistent.wbn", []);
+      await addElementAndWaitForError(script1);
+      clearWebBundleFetchCount();
+
+      // Remove script1, then append script2
+      // script2 should reuse webbundle resources.
+      // And it should also fire an error event.
+      script1.remove();
+      script2 = createWebBundleElement("nonexistent.wbn", []);
+      await addElementAndWaitForError(script2);
+
+      assert_equals(webBundleFetchCount(), 0);
+    }, "'remove(), then append()' should reuse webbundle resources and both scripts should fire error events");
+
+    promise_test(async (t) => {
+      t.add_cleanup(cleanUp);
       await appendScriptWebBundle1AndFetchResource1();
       clearWebBundleFetchCount();
 
@@ -243,5 +279,50 @@
       // original Document.
     }, "append() should reuse webbundle resoruces even if the old script was moved to another document.");
 
+    promise_test(async (t) => {
+      t.add_cleanup(cleanUp);
+      clearWebBundleFetchCount();
+      script1 = createWebBundleElement(
+      wbn_url + "?pipe=trickle(d100.0)",
+      resource1);
+      document.body.appendChild(script1);
+
+      // While script1 is still loading, remove it and make script2
+      // reuse the resources.
+      script2 = createScriptWebBundle2();
+      script1.remove();
+      await addElementAndWaitForLoad(script2);
+
+      // WebBundle should be fetched only once.
+      assert_equals(webBundleFetchCount(), 1);
+    }, "Even if the bundle is still loading, we should reuse the resources.");
+
+    promise_test(async (t) => {
+      t.add_cleanup(cleanUp);
+      script1 = createScriptWebBundle1();
+      document.body.appendChild(script1);
+
+      // Don't wait for the load event for script1.
+      script1.remove();
+      script2 = createScriptWebBundle2();
+
+      // Load event should be fired for script2 regardless of
+      // whether script1 fired a load or not.
+      await addElementAndWaitForLoad(script2);
+    }, "When reusing the resources with script2, a load event should be fired regardless of if the script1 fired a load");
+
+    promise_test(async (t) => {
+      t.add_cleanup(cleanUp);
+      script1 = createWebBundleElement("nonexistent.wbn", []);
+      document.body.appendChild(script1);
+
+      // Don't wait for the error event for script1.
+      script1.remove();
+      script2 = createWebBundleElement("nonexistent.wbn", []);
+
+      // Error event should be fired for script2 regardless of
+      // whether script1 fired an error event or not.
+      await addElementAndWaitForError(script2);
+    }, "When reusing the resources with script2, an error event should be fired regardless of if the script1 fired an error");
   </script>
 </body>
