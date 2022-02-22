@@ -742,6 +742,7 @@ class Chrome(Browser):
         if existing_binary_path:
             self.logger.info("Removing existing ChromeDriver binary: %s" %
                 existing_binary_path)
+
             os.chmod(existing_binary_path, stat.S_IWUSR)
             os.remove(existing_binary_path)
 
