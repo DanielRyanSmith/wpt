@@ -628,12 +628,14 @@ class ChromeChromiumBase(Browser):
         chrome_version = self.version(binary=browser_binary)
         try:
             assert chrome_version, "Cannot determine the version of Chrome"
-            # MojoJS must be a match the browser binary version
+            # MojoJS version url must match the browser binary version exactly.
             url = ("https://storage.googleapis.com/chrome-wpt-mojom/"
                    f"{chrome_version}/linux64/mojojs.zip")
             # Check the status without downloading the content (this is a streaming request).
             get(url)
         except requests.RequestException:
+            # If a valid matching version cannot be found in the wpt archive,
+            # Download from Chromium snapshots bucket. However,
             # MojoJS is only bundled with Linux from Chromium snapshots.
             if self.platform == "Linux":
                 url = self._get_chromium_download_url(chrome_version) + "mojojs.zip"
