@@ -640,7 +640,7 @@ class ChromeChromiumBase(Browser):
             if self.platform == "Linux":
                 url = self._get_chromium_download_url(chrome_version) + "mojojs.zip"
             else:
-                self.logger.debug("A valid MojoJS version cannot be found "
+                self.logger.error("A valid MojoJS version cannot be found "
                                   f"for browser binary version {chrome_version}.")
                 return None
 
