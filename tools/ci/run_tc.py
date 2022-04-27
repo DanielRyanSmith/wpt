@@ -268,13 +268,14 @@ def setup_environment(args):
 
 
 def install_chromium():
-    with open(os.path.join(root, "tools", "latest_chromium_revision_linux"), "r") as revision_file:
-        revision = revision_file.read()
+    revisions_path = os.path.join(os.getcwd(), "tools", "wpt", "latest_chromium_revision.json")
+    with open(revisions_path) as f:
+        revisions = json.load(f)
         dest = os.path.join("/tmp")
         installer_path = os.path.join("/tmp", "chrome-linux.zip")
 
         url = ("https://storage.googleapis.com/chromium-browser-snapshots/Linux_x64/"
-               f"{revision}/chrome-linux.zip")
+               f"{revisions['Linux_x64']}/chrome-linux.zip")
         resp = get(url)
         with open(installer_path, "wb") as f:
             f.write(resp.content)
