@@ -15,7 +15,7 @@ def main():
     with open("tools/wpt/latest_chromium_revisions.json", "r") as f:
         revisions = json.load(f)
     with open("tools/wpt/latest_chromium_revisions.json", "w") as f:
-        for platform in ["Linux_x64", "Mac", "Win"]:
+        for platform in ["Linux_x64", "Mac", "Win", "Win_x64"]:
             try:
                 new_revision = get(build_url_string(platform)).text.strip()
             except requests.RequestException:
