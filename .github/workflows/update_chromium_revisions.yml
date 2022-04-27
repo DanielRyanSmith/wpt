@@ -17,6 +17,8 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: '3.9'
+        cache: 'pip'
+    - run:  pip install requests
     - name: execute update_chromium_revisions.py
       run: python -m tools.wpt.update_chromium_revisions
     - name: Create pull request
