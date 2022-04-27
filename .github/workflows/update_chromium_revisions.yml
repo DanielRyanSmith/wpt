@@ -1,34 +1,34 @@
 name: update_chromium_revisions
 on:
+  # Trigger at every 11 UTC.
   schedule:
-    # Trigger at every 11 UTC.
    - cron: 0 11 * * *
   workflow_dispatch:
 jobs:
   update:
-  runs-on: ubuntu-20.04
-  steps:
-  - name: Checkout
-    uses: actions/checkout@v3
-  - name: setup python
-    uses: actions/setup-python@v2
-    with:
-      python-version: 3.10
-  - name: execute update_chromium_revisions.py
-    run: python -m tools.wpt.update_chromium_revisions
-  - name: Create pull request
-    # Use a conditional step instead of a conditional job to work around #20700.
-    if: github.repository == 'web-platform-tests/wpt'
-    uses: peter-evans/create-pull-request@v4
-    with:
-      token: ${{ secrets.GITHUB_TOKEN }}
-      author: wpt-pr-bot <wpt-pr-bot@users.noreply.github.com>
-      title: "Update latest available Chromium revisions"
-      commit-message: "Latest Chromium revisions for Linux/Win/Mac"
-      body: |
-        This automated pull request updates tools/ci/latest_chromium_revisions.json with the current latest available Chromium revisions for major platforms.
+    runs-on: ubuntu-20.04
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: setup python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.10
+    - name: execute update_chromium_revisions.py
+      run: python -m tools.wpt.update_chromium_revisions
+    - name: Create pull request
+      # Use a conditional step instead of a conditional job to work around #20700.
+      if: github.repository == 'web-platform-tests/wpt'
+      uses: peter-evans/create-pull-request@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        author: wpt-pr-bot <wpt-pr-bot@users.noreply.github.com>
+        title: "Update latest available Chromium revisions"
+        commit-message: "Latest Chromium revisions for Linux/Win/Mac"
+        body: |
+          This automated pull request updates tools/ci/latest_chromium_revisions.json with the current latest available Chromium revisions for major platforms.
 
-        If additional changes are needed, please manually create another PR based on this one.
+          If additional changes are needed, please manually create another PR based on this one.
 
-        See the [workflow](https://github.com/web-platform-tests/wpt/blob/master/.github/workflows/chromium.yml) for how this pull request was created.
-      branch: actions/update-chromium-revisions
+          See the [workflow](https://github.com/web-platform-tests/wpt/blob/master/.github/workflows/chromium.yml) for how this pull request was created.
+        branch: actions/update-chromium-revisions
