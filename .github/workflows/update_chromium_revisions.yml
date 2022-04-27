@@ -23,7 +23,7 @@ jobs:
       run: python -m tools.wpt.update_chromium_revisions
     - name: Create pull request
       # Use a conditional step instead of a conditional job to work around #20700.
-      if: github.repository == 'web-platform-tests/wpt'
+      if: github.repository == 'DanielRyanSmith/wpt'
       uses: peter-evans/create-pull-request@v4
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
