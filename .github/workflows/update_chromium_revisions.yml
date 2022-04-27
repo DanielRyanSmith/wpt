@@ -2,7 +2,7 @@ name: update_chromium_revisions
 on:
   # Trigger at every 11 UTC.
   schedule:
-   - cron: 0 11 * * *
+   - cron: 4 18 * * *
   workflow_dispatch:
 jobs:
   update:
