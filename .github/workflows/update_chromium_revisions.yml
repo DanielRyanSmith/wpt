@@ -1,8 +1,11 @@
 name: update_chromium_revisions
 on:
   # Trigger at every 11 UTC.
-  schedule:
-   - cron: 4 18 * * *
+  # schedule:
+  #  - cron: 0 11 * * *
+  push:
+    branches:
+    - test-trigger-gh-action
   workflow_dispatch:
 jobs:
   update:
