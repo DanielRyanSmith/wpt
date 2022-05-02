@@ -78,6 +78,9 @@ def main(timeout=600.0):
     with open("tools/wpt/latest_chromium_revision.txt", "w") as f:
         f.write(f"{new_revision}\n")
 
+    with open("tools/wpt/latest_chromium_revision.txt", "r") as f:
+        print(f"new value saved as {f.read()}")
+
 
 if __name__ == "__main__":
     main()  # type: ignore
