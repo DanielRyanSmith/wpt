@@ -529,13 +529,12 @@ class ChromeChromiumBase(Browser):
         "Darwin": "Mac",
     }.get(uname[0])
 
-    def _get_latest_chromium_revision(self, architecture):
-        """Queries Chromium Snapshots and returns the latest Chromium revision number
-        for the current platform.
-        """
-        revision_url = ("https://storage.googleapis.com/chromium-browser-snapshots/"
-                        f"{architecture}/LAST_CHANGE")
-        return get(revision_url).text.strip()
+    def _get_pinned_chromium_revision(self) -> str:
+        """Returns the pinned Chromium revision number."""
+        path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                            "latest_chromium_revision.txt")
+        with open(path) as f:
+            return f.read().strip()
 
     def _get_chromium_download_url(self, version=None):
         """Format a Chromium Snapshots URL to download a browser component."""
@@ -557,7 +556,7 @@ class ChromeChromiumBase(Browser):
                                         f"based on version. {url}")
         # If no URL was used in a previous install
         # and no version was passed, use the latest Chromium revision.
-        revision = self._get_latest_chromium_revision(architecture)
+        revision = self._get_pinned_chromium_revision()
 
         # If the url is successfully used to download/install, it will be used again
         # if another component is also installed during this run (browser/webdriver).
