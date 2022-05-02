@@ -18,6 +18,7 @@ def main(timeout=600.0):
     start_revision = None
     with open("tools/wpt/latest_chromium_revision.txt", "r") as f:
         existing_revision = int(f.read())
+        print(f"starting revision = {existing_revision}")
 
     # Get the latest revision for Linux as a starting point to check for
     # a valid revision for all platforms.
