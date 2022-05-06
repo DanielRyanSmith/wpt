@@ -1,0 +1,21 @@
+name: submit_new_chromium_revision
+on:
+  check_suite:
+    branches:
+    - actions/update-chromium-revision
+    types: [completed]
+jobs:
+  update:
+    runs-on: ubuntu-20.04
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.10'
+        cache: 'pip'
+    - name: Install dependencies
+      run: pip install requests google-cloud-storage
+    - name: execute chromium_revision_submit.py
+      run: python tools/wpt/find_chromium_revision_candidate.py
