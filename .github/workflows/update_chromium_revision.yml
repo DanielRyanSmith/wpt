@@ -1,0 +1,16 @@
+name: update_chromium_revision
+on:
+  # Trigger every day at 10 UTC, or manually.
+  check_suite:
+    pull_request_target:
+      types:
+      - edited
+      branches:
+      - master
+jobs:
+  update:
+    runs-on: ubuntu-20.04
+    steps:
+    - name: execute update_chromium_revision.py
+      if: github.repository == 'DanielRyanSmith/wpt'
+      run: curl https://us-central1-wptdashboard.cloudfunctions.net/update-chromium-revision
