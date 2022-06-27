@@ -7,7 +7,7 @@ on:
 jobs:
   update:
     runs-on: ubuntu-20.04
-    if: github.event.sender == 'github-actions' && github.repository == 'DanielRyanSmith/wpt'
+    if: github.event.sender == 'wpt-pr-bot' && github.repository == 'DanielRyanSmith/wpt'
     steps:
     - name: execute update_chromium_revision.py
       run: curl -X GET https://us-central1-wptdashboard.cloudfunctions.net/update-chromium-revision
