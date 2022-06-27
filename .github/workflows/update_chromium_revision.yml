@@ -1,9 +1,9 @@
 # Updates the currently pinned Chromium revision if CI checks pass.
 name: update_chromium_revision
 on:
-  push:
-    branches:
-    - 'actions/update-chromium-revision'
+  pull_request:
+    paths:
+      - 'tools/wpt/pinned_chromium_revision.txt'
 jobs:
   update:
     runs-on: ubuntu-20.04
