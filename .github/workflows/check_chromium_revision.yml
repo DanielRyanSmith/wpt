@@ -7,6 +7,8 @@ on:
 jobs:
   update:
     runs-on: ubuntu-20.04
+    # Use a conditional step instead of a conditional job to work around #20700.
+    if: github.repository == 'DanielRyanSmith/wpt'
     steps:
     - name: Checkout
       uses: actions/checkout@v3
@@ -20,11 +22,9 @@ jobs:
     - name: execute check_chromium_revision.py
       run: python tools/wpt/check_chromium_revision.py
     - name: Create pull request
-      # Use a conditional step instead of a conditional job to work around #20700.
-      if: github.repository == 'DanielRyanSmith/wpt'
       uses: peter-evans/create-pull-request@v4
       with:
-        token: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ secrets.CHROMIUM_REVISION_KEY }}
         author: wpt-pr-bot <wpt-pr-bot@users.noreply.github.com>
         title: "Check if new Chromium revision is viable (DO NOT MERGE)"
         commit-message: "Pinned Chromium revision update for Linux/macOS/Windows"
