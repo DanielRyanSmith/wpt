@@ -1,10 +1,9 @@
 name: update_chromium_revision
 on:
   # Trigger every day at 10 UTC, or manually.
-  check_suite:
-    push:
-      branches:
-      - 'actions/update-chromium-revision'
+  push:
+    branches:
+    - 'actions/update-chromium-revision'
 jobs:
   update:
     runs-on: ubuntu-20.04
