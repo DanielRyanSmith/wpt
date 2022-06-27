@@ -1,0 +1,13 @@
+# Updates the currently pinned Chromium revision if CI checks pass.
+name: update_chromium_revision
+on:
+  push:
+    branches:
+    - 'actions/update-chromium-revision'
+jobs:
+  update:
+    runs-on: ubuntu-20.04
+    if: github.event.sender == 'github-actions' && github.repository == 'DanielRyanSmith/wpt'
+    steps:
+    - name: execute update_chromium_revision.py
+      run: curl -X GET https://us-central1-wptdashboard.cloudfunctions.net/update-chromium-revision
