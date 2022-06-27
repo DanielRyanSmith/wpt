@@ -27,6 +27,7 @@ jobs:
       uses: peter-evans/create-pull-request@v4
       with:
         author: wpt-pr-bot <wpt-pr-bot@users.noreply.github.com>
+        draft: true
         title: "Check if new Chromium revision is viable (DO NOT MERGE)"
         commit-message: "Pinned Chromium revision update for Linux/macOS/Windows"
         body: |
