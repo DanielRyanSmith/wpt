@@ -102,7 +102,14 @@ components:
 
   browser-webkitgtk_minibrowser: {}
 
-  browser-chrome: {}
+  browser-chrome:
+    depends-on:
+      - download-chrome-${vars.channel}
+    download-artifacts:
+      - task: download-chrome-${vars.channel}
+        glob: public/results/chrome-${vars.channel}.*
+        dest: build/
+        extract: true
 
   browser-chromium: {}
 
@@ -181,7 +188,7 @@ tasks:
                 - trigger-push
             - vars:
                 browser: chrome
-                channel: dev
+                channel: experimental
               use:
                 - trigger-master
                 - trigger-push
@@ -269,7 +276,7 @@ tasks:
                 - trigger-push
             - vars:
                 browser: chrome
-                channel: dev
+                channel: experimental
               use:
                 - trigger-master
                 - trigger-push
@@ -307,7 +314,7 @@ tasks:
               - moz-wptsync-bot
         - vars:
             browser: chrome
-            channel: dev
+            channel: experimental
             stability-exclude-users:
               - chromium-wpt-export-bot
       do:
@@ -391,6 +398,19 @@ tasks:
           use:
             - wpt-base
           command: "./wpt install --download-only --destination /home/test/artifacts/ --channel=${vars.channel}  --rename=firefox-${vars.channel} firefox browser"
+  - $map:
+      for:
+        - vars:
+            channel: experimental
+        - vars:
+            channel: beta
+        - vars:
+            channel: stable
+      do:
+        download-chrome-${vars.channel}:
+          use:
+            - wpt-base
+          command: "./wpt install --download-only --destination /home/test/artifacts/ --channel=${vars.channel} chrome browser"
 
   - lint:
       use:

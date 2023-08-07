@@ -832,7 +832,10 @@ class Chromium(ChromeChromiumBase):
                                                        "Contents",
                                                        "MacOS"))
         # which will add .exe on Windows automatically.
-        return which("chrome", path=os.path.join(directory, self._chromium_package_name))
+        path = which("chrome", path=os.path.join(directory, self._chromium_package_name))
+        if path is None:
+            path = which("chrome")
+        return path
 
     def _get_webdriver_url(self, version, revision=None):
         """Get Chromium Snapshots url to download Chromium ChromeDriver."""
@@ -968,7 +971,7 @@ class Chrome(ChromeChromiumBase):
         download_url_reference_file = os.path.join(
             self._get_browser_binary_dir(None, channel), "matching_chromedriver_url.txt")
         if os.path.isfile(download_url_reference_file):
-            self.logger.info(f"Download info for matching ChromeDriver version found.")
+            self.logger.info("Download info for matching ChromeDriver version found.")
             with open(download_url_reference_file, "r") as f:
                 return f.read()
 
@@ -1003,7 +1006,7 @@ class Chrome(ChromeChromiumBase):
                    download_info["chrome"])
         )["url"]
 
-        try:   
+        try:
             # Get the corresponding ChromeDriver download URL for later use.
             chromedriver_url = next(
                 filter(
@@ -1090,13 +1093,17 @@ class Chrome(ChromeChromiumBase):
                                   "Contents",
                                   "MacOS"))
         # "which" will add .exe on Windows automatically.
-        return which("chrome", path=os.path.join(directory, self._package_name_chrome))
+        path = which("chrome", path=os.path.join(directory, self._package_name_chrome))
+        if path is None:
+            path = which("chrome")
+        return path
 
     def find_binary(self, venv_path=None, channel=None):
-        print('----- venv_path: ', venv_path)
-        print('----- channel : ', channel)
-        if venv_path is not None and channel is not None:
-            return self._find_binary_in_directory(self._get_browser_binary_dir(venv_path, channel))
+        # Check for binary in venv first.
+        path = self._find_binary_in_directory(self._get_browser_binary_dir(venv_path, channel))
+        if path is not None:
+            return path
+
         if uname[0] == "Linux":
             name = "google-chrome"
             if channel == "stable":
@@ -1123,6 +1130,7 @@ class Chrome(ChromeChromiumBase):
                 path = os.path.expandvars(r"$LOCALAPPDATA\Google\Chrome SxS\Application\chrome.exe")
             return path
         self.logger.warning("Unable to find the browser binary.")
+
         return None
 
     def install(self, dest=None, channel=None, version=None):
@@ -1189,7 +1197,9 @@ class Chrome(ChromeChromiumBase):
                                 f"{webdriver_binary}, rejecting it")
             return False
 
-        # TODO(DanielRyanSmith): Is this logic still necessary?
+        # TODO(DanielRyanSmith): This logic was part of this function before the
+        # move to Chrome for Testing. Determine if it is still necessary
+        # and change accordingly.
         if not browser_version:
             # If we can't get the browser version,
             # we just have to assume the ChromeDriver is good.
@@ -1217,7 +1227,7 @@ class Chrome(ChromeChromiumBase):
         except (subprocess.CalledProcessError, OSError) as e:
             self.logger.warning(f"Failed to call {binary}: {e}")
             return None
-        m = re.match(r"(?:Google Chrome for Testing) (.*)", version_string)
+        m = re.match(r"(?:Google Chrome for Testing|Google Chrome) (.*)", version_string)
         if not m:
             self.logger.warning(f"Failed to extract version from: {version_string}")
             return None

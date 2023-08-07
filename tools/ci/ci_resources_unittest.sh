@@ -11,6 +11,9 @@ main() {
     ./wpt install firefox browser --destination $HOME
     ./wpt install firefox webdriver --destination $HOME/firefox
     export PATH=$HOME/firefox:$PATH
+    ./wpt install chrome browser
+    ./wpt install chrome webdriver
+    export PATH=$HOME/chrome:$PATH
 
     cd $WPT_ROOT/resources/test
     tox -- --binary=$HOME/browsers/nightly/firefox/firefox

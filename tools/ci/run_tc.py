@@ -40,6 +40,7 @@ import argparse
 import fnmatch
 import json
 import os
+import requests
 import subprocess
 import sys
 import tarfile
@@ -47,7 +48,7 @@ import tempfile
 import zipfile
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-from tools.wpt.utils import get_download_to_descriptor
+from tools.wpt.utils import get_download_to_descriptor, unzip
 
 root = os.path.abspath(
     os.path.join(os.path.dirname(__file__),
@@ -141,22 +142,33 @@ def install_certificates():
 
 
 def install_chrome(channel):
-    if channel in ("experimental", "dev"):
-        deb_archive = "google-chrome-unstable_current_amd64.deb"
-    elif channel == "beta":
-        deb_archive = "google-chrome-beta_current_amd64.deb"
-    elif channel == "stable":
-        deb_archive = "google-chrome-stable_current_amd64.deb"
-    else:
+    if channel in ("nightly", "experimental"):
+        channel = "canary"
+    if channel not in ("stable", "beta", "dev", "canary"):
         raise ValueError("Unrecognized release channel: %s" % channel)
 
-    dest = os.path.join("/tmp", deb_archive)
-    deb_url = "https://dl.google.com/linux/direct/%s" % deb_archive
-    with open(dest, "wb") as f:
-        get_download_to_descriptor(f, deb_url)
+    try:
+        resp = requests.get(
+            "https://googlechromelabs.github.io"
+            "/chrome-for-testing/last-known-good-versions-with-downloads.json")
+    except requests.RequestException as e:
+        raise requests.RequestException(
+            "Chrome for Testing versions not found", e)
+    versions_json = resp.json()
+    download_info = versions_json["channels"][channel.capitalize()]["downloads"]["chrome"]
 
-    run(["sudo", "apt-get", "-qqy", "update"])
-    run(["sudo", "gdebi", "-qn", "/tmp/%s" % deb_archive])
+    # Find the download URL that matches the current platform.
+    download_url = next(
+        filter(lambda x: x["platform"] == "linux64", download_info))["url"]
+
+    installer_path = os.path.join("/tmp", "chrome-linux64.zip")
+    with open(installer_path, "wb") as f:
+        get_download_to_descriptor(f, download_url)
+
+    with open(installer_path, "rb") as f:
+        unzip(f, "/tmp")
+    os.remove(installer_path)
+    run(["sudo", "mv", "/tmp/chrome-linux64/chrome", "/usr/bin"])
 
 
 def start_xvfb():
@@ -254,9 +266,9 @@ def setup_environment(args):
     if args.install_certificates:
         install_certificates()
 
-    # if "chrome" in args.browser:
-    #     assert args.channel is not None
-    #     install_chrome(args.channel)
+    if "chrome" in args.browser:
+        assert args.channel is not None
+        install_chrome(args.channel)
 
     if args.xvfb:
         start_xvfb()

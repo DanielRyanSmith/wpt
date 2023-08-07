@@ -110,7 +110,7 @@ def test_list_tests(manifest_dir):
 
     with pytest.raises(SystemExit) as excinfo:
         wpt.main(argv=["run", "--metadata", manifest_dir, "--list-tests",
-                       "--channel", "dev", "--yes",
+                       "--channel", "canary", "--yes",
                        # Taskcluster machines do not have GPUs, so use software rendering via --enable-swiftshader.
                        "--enable-swiftshader",
                        "chrome", "/dom/nodes/Element-tagName.html"])
@@ -179,7 +179,7 @@ def test_run_zero_tests():
         pytest.skip("port 8000 already in use")
 
     with pytest.raises(SystemExit) as excinfo:
-        wpt.main(argv=["run", "--yes", "--no-pause", "--channel", "dev",
+        wpt.main(argv=["run", "--yes", "--no-pause", "--channel", "canary",
                        # Taskcluster machines do not have GPUs, so use software rendering via --enable-swiftshader.
                        "--enable-swiftshader",
                        "chrome", "/non-existent-dir/non-existent-file.html"])
@@ -187,7 +187,7 @@ def test_run_zero_tests():
 
     with pytest.raises(SystemExit) as excinfo:
         wpt.main(argv=["run", "--yes", "--no-pause", "--no-fail-on-unexpected",
-                       "--channel", "dev",
+                       "--channel", "canary",
                        # Taskcluster machines do not have GPUs, so use software rendering via --enable-swiftshader.
                        "--enable-swiftshader",
                        "chrome", "/non-existent-dir/non-existent-file.html"])
@@ -208,7 +208,7 @@ def test_run_failing_test():
     assert os.path.isfile("../../%s" % failing_test)
 
     with pytest.raises(SystemExit) as excinfo:
-        wpt.main(argv=["run", "--yes", "--no-pause", "--channel", "dev",
+        wpt.main(argv=["run", "--yes", "--no-pause", "--channel", "canary",
                        # Taskcluster machines do not have GPUs, so use software rendering via --enable-swiftshader.
                        "--enable-swiftshader",
                        "chrome", failing_test])
@@ -216,7 +216,7 @@ def test_run_failing_test():
 
     with pytest.raises(SystemExit) as excinfo:
         wpt.main(argv=["run", "--yes", "--no-pause", "--no-fail-on-unexpected",
-                       "--channel", "dev",
+                       "--channel", "canary",
                        # Taskcluster machines do not have GPUs, so use software rendering via --enable-swiftshader.
                        "--enable-swiftshader",
                        "chrome", failing_test])
@@ -243,7 +243,7 @@ def test_run_verify_unstable(temp_test):
     """)
 
     with pytest.raises(SystemExit) as excinfo:
-        wpt.main(argv=["run", "--yes", "--verify", "--channel", "dev",
+        wpt.main(argv=["run", "--yes", "--verify", "--channel", "canary",
                        # Taskcluster machines do not have GPUs, so use software rendering via --enable-swiftshader.
                        "--enable-swiftshader",
                        "chrome", unstable_test])
@@ -252,7 +252,7 @@ def test_run_verify_unstable(temp_test):
     stable_test = temp_test("test(function() {}, 'my test');")
 
     with pytest.raises(SystemExit) as excinfo:
-        wpt.main(argv=["run", "--yes", "--verify", "--channel", "dev",
+        wpt.main(argv=["run", "--yes", "--verify", "--channel", "canary",
                        # Taskcluster machines do not have GPUs, so use software rendering via --enable-swiftshader.
                        "--enable-swiftshader",
                        "chrome", stable_test])

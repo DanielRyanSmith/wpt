@@ -3,9 +3,13 @@ steps:
 # The raw google-chrome-dev cask URL is used to bypass caching.
 - script: |
     set -eux -o pipefail
-    HOMEBREW_NO_AUTO_UPDATE=1 brew uninstall --cask google-chrome || true
-    HOMEBREW_NO_AUTO_UPDATE=1 brew uninstall --cask chromedriver || true
-    curl https://raw.githubusercontent.com/Homebrew/homebrew-cask-versions/master/Casks/google-chrome-dev.rb > google-chrome-dev.rb
-    HOMEBREW_NO_AUTO_UPDATE=1 brew install --cask google-chrome-dev.rb
-  displayName: 'Install Chrome Dev'
+
+  # wget unzip chrome jq
+  # CHROME_DOWNLOAD_URL=$$(curl -s https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions-with-downloads.json | jq -r ".channels.Canary.downloads.chrome[] | select(.platform == \"linux64\") | .url"); \
+  # TEMP_DIR=$$(mktemp -d); \
+  # wget -q -O $${TEMP_DIR}/chrome-linux64.zip $${CHROME_DOWNLOAD_URL}; \
+  # unzip -j $${TEMP_DIR}/chrome-linux64.zip -d $${TEMP_DIR}; \
+  # sudo mv $${TEMP_DIR}/chrome .; \
+  ./wpt install --channel experimental chrome browser
+  displayName: 'Install Chrome Canary'
   condition: and(succeeded(), eq(variables['Agent.OS'], 'Darwin'))
