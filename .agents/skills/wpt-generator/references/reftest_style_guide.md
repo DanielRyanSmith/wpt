@@ -47,11 +47,19 @@ The reference file describes the *expected* output. **Crucially, it should not u
 - **Path Lengths**: Keep paths under 150 characters relative to the test root to avoid Windows limitations.
 - **CSS Uniqueness**: In the `css/` directory, filenames must be unique across the entire `css/` tree.
 
-## 3. The Golden Rule of References
+## 3. Reusing Reference Files (CRITICAL)
+
+Before creating a new reference file, **you MUST check if an existing reference file can be reused**. Reusing references is highly preferred because it reduces repository bloat and speeds up automated test runners.
+
+- Look in the current directory and any `reference/`, `references/`, or `support/` subdirectories.
+- Look for standard WPT shared references (e.g., `../reference/ref-filled-green-100px-square.xht`).
+- If an existing file produces the exact same visual rendering (e.g., a simple green square or a blank white page), link to it using `<link rel="match" href="...">` instead of creating a new `-ref.html` file.
+
+## 4. The Golden Rule of References
 
 **References must be simple.** If you are testing CSS Grid, your reference should use absolute positioning, floats, or simple block layout to achieve the same visual result. This ensures that a failure in the reference doesn't cause a false positive or negative in the test.
 
-## 4. Visual Patterns for Success and Failure
+## 5. Visual Patterns for Success and Failure
 
 Tests should be "self-describing" so a human can easily verify them.
 
@@ -71,7 +79,7 @@ Tests should be "self-describing" so a human can easily verify them.
 </div>
 ```
 
-## 5. Using the Ahem Font
+## 6. Using the Ahem Font
 
 When testing text layout, standard fonts are unreliable due to platform differences. Use the **Ahem font**, which has precise, square metrics.
 
@@ -86,7 +94,7 @@ When testing text layout, standard fonts are unreliable due to platform differen
 }
 ```
 
-## 6. Advanced Reftest Features
+## 7. Advanced Reftest Features
 
 ### Asynchronous Tests (`reftest-wait`)
 If your test requires DOM manipulation or animation before the screenshot, use the `reftest-wait` class on the root element.
@@ -129,7 +137,7 @@ If subtle anti-aliasing differences are expected, use the `fuzzy` meta tag.
 - If multiple `rel="match"` links are present, the test passes if **at least one** matches.
 - If multiple `rel="mismatch"` links are present, the test passes if **all** mismatch.
 
-## 7. Print Reftests
+## 8. Print Reftests
 
 Print reftests verify paginated output.
 - **Naming**: Use the `-print` suffix or place in a `print/` directory.
@@ -137,7 +145,7 @@ Print reftests verify paginated output.
 - **Page Size**: The default page size is 12.7 cm by 7.62 cm (5x3 inches) with 12.7 mm (0.5 inch) margins.
 - **Page Range**: Use `<meta name="reftest-pages" content="1-2, 5">` to limit comparison.
 
-## 8. General Requirements and Metadata
+## 9. General Requirements and Metadata
 
 ### Essential Metadata
 - **Charset**: Always include `<meta charset="utf-8">`.
@@ -169,7 +177,7 @@ Example:
 - **No External Resources**: Tests must be self-contained; do not link to external CDNs or images.
 - **Cross-Platform**: Ensure the test doesn't rely on specific screen resolutions or installed system fonts (use Ahem instead).
 
-## 9. Validation and Running
+## 10. Validation and Running
 
 - **Linting**: Always run `./wpt lint` before submitting. It catches metadata errors, trailing whitespace, and more.
 - **Running**: Use `wpt run <browser> <path/to/test>` to verify your test locally.

@@ -52,7 +52,21 @@ Write the appropriate WPT test using the specifications from the blueprint:
 
 Ensure you format the file appropriately according to the loaded reference.
 
-### 5. Final Checks
-- Ensure standard WPT scripts are included properly (if applicable) using absolute paths from the root server.
-- Ensure crashtests end with `-crash.html` if creating a new crashtest file.
+### 5. Validate and Fix (Mandatory)
+A test is not complete until it has been empirically validated to run without framework errors and to conform to WPT style guidelines.
+
+1. **Linting:** Run the WPT linter on the newly created or modified file:
+   ```bash
+   ./wpt lint <path_to_test_file>
+   ```
+   If the linter reports errors (like `TRAILING WHITESPACE` or `CR AT EOL`), you MUST fix the file and re-run the linter until it passes cleanly.
+   
+2. **Headless Execution:** Verify the structural and syntactical integrity of the test by running it in a headless browser:
+   ```bash
+   ./wpt run chrome <path_to_test_file> --headless
+   ```
+   - **Analyze the Output:** Look for `Harness Error`, `SyntaxError`, or timeouts. 
+   - **Iterate:** If the test fails to run due to a syntax error, bad import, or malformed HTML, read the error output, fix the code, and run it again. (Note: A test failing because the browser doesn't support the feature yet is acceptable, but a test failing because of bad JavaScript syntax is not).
+
+### 6. Final Checks
 - Do not check in or commit files unless explicitly requested.
