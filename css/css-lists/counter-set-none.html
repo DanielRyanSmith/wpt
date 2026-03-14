@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>CSS Lists: counter-set: none does not alter counters</title>
+<link rel="help" href="https://drafts.csswg.org/css-lists-3/#counter-set-property">
+<link rel="match" href="counter-set-none-ref.html">
+<meta name="assert" content="If the counter-set property is set to none, the element must not alter the value of any counters.">
+<style>
+  body {
+    counter-reset: c 1;
+  }
+  .test {
+    counter-set: none;
+  }
+  .result::before {
+    content: counter(c);
+  }
+</style>
+<p>Test passes if the number '1' is displayed below.</p>
+<span class="test"></span><span class="result"></span>

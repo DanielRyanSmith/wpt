@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>counter-set initial value</title>
+<link rel="help" href="https://drafts.csswg.org/css-lists-3/#propdef-counter-set">
+<meta name="assert" content="The initial value of the `counter-set` property must be `none`.">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<body>
+<div id="target"></div>
+<script>
+test(() => {
+  const target = document.getElementById('target');
+  const computedStyle = getComputedStyle(target);
+  const value = computedStyle.getPropertyValue('counter-set');
+  assert_equals(value, 'none');
+}, "The computed value is 'none'.");
+</script>
+</body>

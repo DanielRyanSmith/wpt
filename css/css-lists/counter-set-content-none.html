@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>CSS Lists: counter-set on pseudo-element with content: none</title>
+<link rel="help" href="https://drafts.csswg.org/css-lists/#propdef-counter-set">
+<link rel="match" href="counter-set-content-none-ref.html">
+<meta name="assert" content="If an element does not generate a box (such as a pseudo-element with the content property set to none), the counter-set property must have no effect on the counter values.">
+<style>
+  body {
+    counter-reset: my-counter 1;
+  }
+  .hidden::before {
+    content: none;
+    counter-set: my-counter 5;
+  }
+  .display::before {
+    content: counter(my-counter);
+  }
+</style>
+<body>
+  <p>Test passes if there is a number '1' below.</p>
+  <div class="hidden"></div>
+  <div class="display"></div>
+</body>

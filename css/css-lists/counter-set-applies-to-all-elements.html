@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>counter-set applies to all elements</title>
+<link rel="help" href="https://drafts.csswg.org/css-lists-3/#propdef-counter-set">
+<meta name="assert" content="The `counter-set` property must apply to all elements.">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+
+<style>
+  .test-element {
+    counter-set: my-counter 5;
+  }
+</style>
+
+<body>
+  <!-- HTML elements -->
+  <div id="test-div" class="test-element"></div>
+  <span id="test-span" class="test-element"></span>
+
+  <!-- SVG elements -->
+  <svg id="test-svg" class="test-element" width="10" height="10">
+    <rect id="test-rect" class="test-element" width="10" height="10"></rect>
+  </svg>
+
+  <!-- MathML elements -->
+  <math id="test-math" class="test-element">
+    <mrow id="test-mrow" class="test-element">
+      <mi>x</mi>
+    </mrow>
+  </math>
+
+  <script>
+    const expected = 'my-counter 5';
+    const elements = [
+      'test-div',
+      'test-span',
+      'test-svg',
+      'test-rect',
+      'test-math',
+      'test-mrow'
+    ];
+
+    for (const id of elements) {
+      const element = document.getElementById(id);
+      test(() => {
+        const style = getComputedStyle(element);
+        assert_equals(style.getPropertyValue('counter-set'), expected);
+      }, `counter-set applies to ${element.tagName.toLowerCase()} element`);
+    }
+  </script>
+</body>

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>counter-set on display: none element (Error Scenarios)</title>
+<link rel="help" href="https://drafts.csswg.org/css-lists/#propdef-counter-set">
+<link rel="match" href="counter-set-display-none-error-ref.html">
+<meta name="assert" content="If the counter-set property is applied to an element that does not generate a box (such as an element with display: none), the property must have no effect.">
+<style>
+  body {
+    counter-reset: my-counter 1;
+  }
+  .hidden {
+    display: none;
+    counter-set: my-counter 5;
+  }
+  .display::before {
+    content: counter(my-counter);
+  }
+</style>
+<body>
+  <p>Test passes if there is a number '1' below.</p>
+  <div class="hidden"></div>
+  <div class="display"></div>
+</body>

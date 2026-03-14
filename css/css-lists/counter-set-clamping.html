@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>CSS Lists: counter-set value clamping</title>
+<link rel="help" href="https://drafts.csswg.org/css-lists-3/#propdef-counter-set">
+<meta name="assert" content="If the counter-set property specifies a value that pushes the counter outside the implementation-specific maximum or minimum range, the value must be clamped to that range.">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+</head>
+<body>
+<div id="target"></div>
+<script>
+test(() => {
+  const el = document.getElementById('target');
+  const largeVal = '9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999';
+  el.style.counterSet = `my-counter ${largeVal}`;
+
+  const computed = getComputedStyle(el).counterSet;
+
+  assert_not_equals(computed, 'none', 'The value should not be none or dropped');
+  assert_not_equals(computed, '', 'The value should not be empty');
+
+  const match = computed.match(/^my-counter (-?\d+)$/);
+  assert_true(match !== null, 'The computed value should be of the format "my-counter <integer>"');
+
+  const intVal = parseInt(match[1], 10);
+  assert_greater_than_equal(intVal, 2147483647, 'The clamped value should be at least the 32-bit integer maximum');
+}, "counter-set specifies a value that pushes the counter outside the implementation-specific maximum range");
+
+test(() => {
+  const el = document.getElementById('target');
+  const smallVal = '-9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999';
+  el.style.counterSet = `my-counter ${smallVal}`;
+
+  const computed = getComputedStyle(el).counterSet;
+
+  assert_not_equals(computed, 'none', 'The value should not be none or dropped');
+  assert_not_equals(computed, '', 'The value should not be empty');
+
+  const match = computed.match(/^my-counter (-?\d+)$/);
+  assert_true(match !== null, 'The computed value should be of the format "my-counter <integer>"');
+
+  const intVal = parseInt(match[1], 10);
+  assert_less_than_equal(intVal, -2147483648, 'The clamped value should be at most the 32-bit integer minimum');
+}, "counter-set specifies a value that pushes the counter outside the implementation-specific minimum range");
+</script>
+</body>
+</html>
