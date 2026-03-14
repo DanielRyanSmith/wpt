@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>CSS Fonts 4: Support for line-gap-override descriptor in @font-face</title>
+<link rel="help" href="https://drafts.csswg.org/css-fonts-4/#font-metrics-override-desc">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<style id="testStyle"></style>
+<script>
+  const sheet = testStyle.sheet;
+
+  const valid_tests = [
+    'normal',
+    '100%',
+    '0%',
+    '110%'
+  ];
+
+  const invalid_tests = [
+    '-100%',
+    '-1%',
+    '10px',
+    'auto'
+  ];
+
+  for (let value of valid_tests) {
+    test(() => {
+      assert_equals(sheet.cssRules.length, 0, "testStyle sheet should initially be empty");
+      sheet.insertRule(`@font-face { line-gap-override: ${value}; }`);
+      try {
+        const rule = sheet.cssRules[0];
+        assert_equals(rule.style.getPropertyValue("line-gap-override"), value);
+      } finally {
+        sheet.deleteRule(0);
+      }
+    }, `The @font-face rule must support the line-gap-override descriptor with valid value: ${value}`);
+  }
+
+  for (let value of invalid_tests) {
+    test(() => {
+      assert_equals(sheet.cssRules.length, 0, "testStyle sheet should initially be empty");
+      sheet.insertRule(`@font-face { line-gap-override: ${value}; }`);
+      try {
+        const rule = sheet.cssRules[0];
+        assert_equals(rule.style.getPropertyValue("line-gap-override"), "");
+      } finally {
+        sheet.deleteRule(0);
+      }
+    }, `The @font-face rule must reject the line-gap-override descriptor with invalid value: ${value}`);
+  }
+</script>

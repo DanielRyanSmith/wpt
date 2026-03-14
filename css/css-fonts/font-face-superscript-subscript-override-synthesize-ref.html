@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CSS Fonts 5: superscript and subscript overrides synthesize glyphs reference</title>
+<style>
+@font-face {
+  font-family: custom-font;
+  src: url(/fonts/Ahem.ttf);
+}
+.test {
+  font-family: custom-font;
+  font-size: 100px;
+  line-height: 1;
+}
+.super {
+  font-size: 50px;
+  position: relative;
+  bottom: 50px;
+}
+.sub {
+  font-size: 50px;
+  position: relative;
+  bottom: -50px;
+}
+</style>
+</head>
+<body>
+  <p>Test passes if the black boxes match identically.</p>
+  <div class="test">
+    <span class="super">X</span><span class="sub">X</span>
+  </div>
+</body>
+</html>

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>CSS Fonts 5: size-adjust scales font metrics and glyphs reference</title>
+<style>
+@font-face {
+  font-family: normal-font;
+  src: local(Ahem), url(/fonts/Ahem.ttf);
+}
+
+div {
+  line-height: 200px;
+  margin-bottom: 20px;
+}
+
+.normal {
+  font-family: normal-font, sans-serif;
+  font-size: 100px;
+}
+</style>
+<body>
+  <div class="normal">X X X</div>
+  <div class="normal">X X X</div>
+</body>

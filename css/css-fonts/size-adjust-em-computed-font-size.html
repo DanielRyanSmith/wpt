@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>CSS Fonts Test: size-adjust does not affect em units or computed font-size</title>
+<link rel="help" href="https://drafts.csswg.org/css-fonts-5/#descdef-font-face-size-adjust">
+<meta name="assert" content="The size-adjust descriptor must not affect the computed font-size or any values that derive from it, such as em units.">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<style>
+@font-face {
+  font-family: 'custom-adjusted';
+  src: url('/fonts/Ahem.ttf');
+  size-adjust: 50%;
+}
+.test-container {
+  font-family: 'custom-adjusted', sans-serif;
+  font-size: 20px;
+}
+.em-box {
+  width: 10em;
+  display: inline-block;
+}
+</style>
+<body>
+<!-- Force font loading -->
+<div style="visibility: hidden; position: absolute;" class="test-container">x</div>
+
+<div class="test-container" id="container">
+  <div id="em-box" class="em-box"></div>
+</div>
+
+<script>
+promise_test(async () => {
+  await document.fonts.ready;
+
+  const emBox = document.getElementById('em-box');
+
+  const computedFontSize = window.getComputedStyle(emBox).fontSize;
+  assert_equals(computedFontSize, '20px', 'computed font-size should not be affected by size-adjust');
+
+  const emBoxRect = emBox.getBoundingClientRect();
+  assert_equals(emBoxRect.width, 200, 'em units should be based on the unadjusted computed font-size (10 * 20px = 200px)');
+}, 'size-adjust does not affect em units or computed font-size');
+</script>
+</body>

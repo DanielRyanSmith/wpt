@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>CSS Fonts Test: @font-face rule without font-family is invalid</title>
+<link rel="help" href="https://drafts.csswg.org/css-fonts-4/#font-face-rule">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+</head>
+<body>
+<style id="testStyle"></style>
+<div id="testElement" style="font-size: 20px; font-family: 'InvalidFont', '', sans-serif;">X</div>
+<div id="referenceElement" style="font-size: 20px; font-family: sans-serif;">X</div>
+<script>
+promise_test(async (t) => {
+  const styleElement = document.getElementById("testStyle");
+  const sheet = styleElement.sheet;
+
+  // 1. Insert a `@font-face` rule into the stylesheet with a `src` descriptor but no `font-family` descriptor.
+  sheet.insertRule(`@font-face { src: url('/fonts/pass.woff'); }`, 0);
+
+  // Await document.fonts.ready in case a buggy browser attempts to load the invalid font asynchronously.
+  await document.fonts.ready;
+
+  // 3. Check the CSSOM to see if the rule is considered invalid or dropped.
+  const rules = sheet.cssRules;
+  assert_equals(rules.length, 1, "The rule should be parsed into the CSSOM");
+
+  const rule = rules[0];
+  assert_equals(rule.type, CSSRule.FONT_FACE_RULE, "The parsed rule should be a CSSFontFaceRule");
+  assert_equals(rule.style.getPropertyValue("font-family"), "", "The font-family descriptor should be empty");
+
+  // Ensure the invalid font rule is not added to the FontFaceSet.
+  let hasInvalidOrEmpty = false;
+  for (const font of document.fonts) {
+    if (font.family === "" || font.family === "InvalidFont" || font.family === "''") {
+      hasInvalidOrEmpty = true;
+    }
+  }
+  assert_false(hasInvalidOrEmpty, "The invalid font should not be added to the FontFaceSet");
+
+  // 2. Attempt to use the font in the document and verify it falls back to the next available font.
+  const testElement = document.getElementById("testElement");
+  const referenceElement = document.getElementById("referenceElement");
+
+  // Force a layout to ensure styles are computed and rendered.
+  const testWidth = testElement.getBoundingClientRect().width;
+  const refWidth = referenceElement.getBoundingClientRect().width;
+
+  // We expect the fallback sans-serif font to be used.
+  assert_equals(testWidth, refWidth, "The test element should fall back to the reference sans-serif font");
+}, "The @font-face rule must be considered invalid if it does not contain a font-family descriptor.");
+</script>
+</body>
+</html>

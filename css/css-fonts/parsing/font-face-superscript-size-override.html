@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>CSS Fonts 5: Support for superscript-size-override descriptor in @font-face</title>
+<link rel="help" href="https://drafts.csswg.org/css-fonts-5/#descdef-font-face-superscript-size-override">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<style id="testStyle"></style>
+<script>
+  const sheet = testStyle.sheet;
+
+  test(() => {
+    assert_equals(sheet.cssRules.length, 0, "testStyle sheet should initially be empty");
+    sheet.insertRule(`@font-face { superscript-size-override: 10%; }`);
+    try {
+      const rule = sheet.cssRules[0];
+      assert_equals(rule.style.getPropertyValue("superscript-size-override"), "10%");
+    } finally {
+      sheet.deleteRule(0);
+    }
+  }, "The @font-face rule must support the superscript-size-override descriptor with percentage value");
+
+  test(() => {
+    assert_equals(sheet.cssRules.length, 0, "testStyle sheet should initially be empty");
+    sheet.insertRule(`@font-face { superscript-size-override: normal; }`);
+    try {
+      const rule = sheet.cssRules[0];
+      assert_equals(rule.style.getPropertyValue("superscript-size-override"), "normal");
+    } finally {
+      sheet.deleteRule(0);
+    }
+  }, "The @font-face rule must support the superscript-size-override descriptor with normal value");
+</script>

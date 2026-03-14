@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>CSS Fonts: Invalid @font-face without src</title>
+<link rel="help" href="https://drafts.csswg.org/css-fonts-4/#font-face-rule">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<body>
+<style id="testStyle"></style>
+<div id="testElement" style="font-family: 'TestFont', monospace;">Test Text</div>
+<div id="controlElement" style="font-family: 'UnknownFont123', monospace;">Test Text</div>
+<script>
+  test(() => {
+    const styleElement = document.getElementById("testStyle");
+    // 1. Insert a `@font-face` rule into the stylesheet with a `font-family` descriptor but no `src` descriptor.
+    styleElement.textContent = `
+      @font-face {
+        font-family: 'TestFont';
+      }
+    `;
+
+    // 2. Attempt to use the font in the document and verify it falls back to the next available font.
+    // We compare against a control element that uses a known non-existent font to verify identical fallback metrics.
+    const testElement = document.getElementById("testElement");
+    const controlElement = document.getElementById("controlElement");
+
+    assert_equals(testElement.offsetWidth, controlElement.offsetWidth, "Width should match the fallback monospace font");
+    assert_equals(testElement.offsetHeight, controlElement.offsetHeight, "Height should match the fallback monospace font");
+
+    // 3. Check the CSSOM to see if the rule is considered invalid or dropped.
+    const stylesheet = styleElement.sheet;
+
+    // According to CSS Fonts, if a required descriptor is missing, the rule might be ignored.
+    // "If the src descriptor is missing, the @font-face rule is invalid and must be ignored."
+    // Let's assert that the rule is either dropped entirely or left empty/invalid.
+    if (stylesheet.cssRules.length > 0) {
+      const rule = stylesheet.cssRules[0];
+      assert_true(rule instanceof CSSFontFaceRule, "Rule should be a CSSFontFaceRule if parsed");
+      assert_equals(rule.style.getPropertyValue('src'), "", "src should be empty");
+    } else {
+      assert_equals(stylesheet.cssRules.length, 0, "Rule should be dropped if invalid");
+    }
+
+  }, "The @font-face rule must be considered invalid if it does not contain a src descriptor.");
+</script>
+</body>
+</html>

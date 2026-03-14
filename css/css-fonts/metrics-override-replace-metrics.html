@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>ascent-override, descent-override, line-gap-override replace metrics</title>
+<link rel="help" href="https://drafts.csswg.org/css-fonts-4/#font-metrics-override-desc">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<style>
+@font-face {
+  font-family: 'TestFont';
+  src: local('Ahem'), url('/fonts/Ahem.ttf');
+  ascent-override: 80%;
+  descent-override: 20%;
+  line-gap-override: 10%;
+}
+
+#test-element {
+  font-family: 'TestFont';
+  font-size: 20px;
+  line-height: normal;
+  display: inline-block;
+}
+</style>
+
+<div id="test-element">X</div>
+
+<script>
+promise_test(async () => {
+  await document.fonts.ready;
+  const el = document.getElementById("test-element");
+  // The line box height = ascent (80%) + descent (20%) + line-gap (10%) = 110% of 20px = 22px
+  assert_equals(el.offsetHeight, 22, "The line box height should reflect the overridden metrics.");
+}, "The line box height should reflect the overridden metrics.");
+</script>

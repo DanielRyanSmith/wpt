@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>CSS Fonts Test: size-adjust scales ex and ch units</title>
+<link rel="help" href="https://drafts.csswg.org/css-fonts-5/#descdef-font-face-size-adjust">
+<meta name="assert" content="The size-adjust descriptor must scale values derived from font metrics, such as ex and ch units, when sourced from the adjusted font.">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<style>
+@font-face {
+  font-family: 'custom-adjusted';
+  src: url('/fonts/Ahem.ttf');
+  size-adjust: 50%;
+}
+@font-face {
+  font-family: 'custom-normal';
+  src: url('/fonts/Ahem.ttf');
+}
+
+.adjusted {
+  font-family: 'custom-adjusted', sans-serif;
+  font-size: 20px;
+}
+.normal {
+  font-family: 'custom-normal', sans-serif;
+  font-size: 20px;
+}
+.test-box {
+  width: 10ch;
+  height: 10ex;
+  display: inline-block;
+}
+</style>
+<body>
+<!-- Force font loading by using the fonts -->
+<div style="visibility: hidden; position: absolute;">
+  <span class="adjusted">x</span>
+  <span class="normal">x</span>
+</div>
+
+<div class="adjusted">
+  <div id="adjusted-box" class="test-box"></div>
+</div>
+<div class="normal">
+  <div id="normal-box" class="test-box"></div>
+</div>
+
+<script>
+promise_test(async () => {
+  await document.fonts.ready;
+
+  const adjustedBox = document.getElementById('adjusted-box');
+  const normalBox = document.getElementById('normal-box');
+
+  const adjustedRect = adjustedBox.getBoundingClientRect();
+  const normalRect = normalBox.getBoundingClientRect();
+
+  // Ahem normal: ch is 1em (20px), ex is 0.8em (16px) exactly, so normalBox width = 200px, height = 160px
+  assert_equals(adjustedRect.width, normalRect.width / 2, 'ch units should be scaled by 50%');
+  assert_equals(adjustedRect.height, normalRect.height / 2, 'ex units should be scaled by 50%');
+}, 'size-adjust scales ex and ch units');
+</script>
+</body>

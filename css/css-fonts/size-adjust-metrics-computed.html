@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>CSS Fonts Test: size-adjust scales ex, ch, and text-decoration-thickness</title>
+<link rel="help" href="https://drafts.csswg.org/css-fonts-5/#descdef-font-face-size-adjust">
+<meta name="assert" content="When the size-adjust descriptor is applied to a @font-face, any values derived from font metrics, such as ex and ch units or the from-font value of text-decoration-thickness, must be scaled by the given percentage.">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<style>
+@font-face {
+  font-family: 'custom-adjusted';
+  src: url('/fonts/Ahem.ttf');
+  size-adjust: 50%;
+}
+@font-face {
+  font-family: 'custom-normal';
+  src: url('/fonts/Ahem.ttf');
+}
+
+.adjusted {
+  font-family: 'custom-adjusted', sans-serif;
+  font-size: 20px;
+}
+.normal {
+  font-family: 'custom-normal', sans-serif;
+  font-size: 20px;
+}
+
+/* We use a div to measure the computed values */
+#test-adjusted {
+  width: 1ch;
+  height: 1ex;
+  text-decoration-thickness: from-font;
+  text-decoration-line: underline;
+}
+
+#test-normal {
+  width: 1ch;
+  height: 1ex;
+  text-decoration-thickness: from-font;
+  text-decoration-line: underline;
+}
+</style>
+<body>
+<div class="adjusted">
+  <div id="test-adjusted">x</div>
+</div>
+<div class="normal">
+  <div id="test-normal">x</div>
+</div>
+
+<script>
+promise_test(async () => {
+  await document.fonts.ready;
+
+  const adjustedEl = document.getElementById('test-adjusted');
+  const normalEl = document.getElementById('test-normal');
+
+  const adjustedStyle = getComputedStyle(adjustedEl);
+  const normalStyle = getComputedStyle(normalEl);
+
+  const parseFloatValue = (val) => parseFloat(val);
+
+  const normalCh = parseFloatValue(normalStyle.width);
+  const normalEx = parseFloatValue(normalStyle.height);
+
+  const adjustedCh = parseFloatValue(adjustedStyle.width);
+  const adjustedEx = parseFloatValue(adjustedStyle.height);
+
+  assert_equals(adjustedCh, normalCh * 0.5, 'ch unit should be scaled by 50%');
+  assert_equals(adjustedEx, normalEx * 0.5, 'ex unit should be scaled by 50%');
+
+  // Measure text-decoration-thickness: from-font
+  // Note: if the browser returns "from-font" instead of a resolved pixel value,
+  // parseFloat will return NaN. We use assert_equals to check the scaling,
+  // which may fail if the browser doesn't resolve the value to pixels.
+  const normalThicknessStr = normalStyle.textDecorationThickness;
+  const adjustedThicknessStr = adjustedStyle.textDecorationThickness;
+
+  if (normalThicknessStr !== 'from-font' && normalThicknessStr !== 'auto') {
+    const normalThickness = parseFloatValue(normalThicknessStr);
+    const adjustedThickness = parseFloatValue(adjustedThicknessStr);
+    assert_equals(adjustedThickness, normalThickness * 0.5, 'text-decoration-thickness: from-font should be scaled by 50%');
+  } else {
+    // Force a failure if the browser doesn't resolve it, per the test's expectation
+    // that the computed value can be measured and scaled.
+    assert_unreached(`text-decoration-thickness: from-font computed to ${normalThicknessStr}, expected a pixel length`);
+  }
+
+}, 'size-adjust scales ex, ch, and text-decoration-thickness');
+</script>
+</body>

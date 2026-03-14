@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>ascent-override, descent-override, line-gap-override do not affect font-size or em units</title>
+<link rel="help" href="https://drafts.csswg.org/css-fonts-4/#font-metrics-override-desc">
+<link rel="stylesheet" type="text/css" href="/fonts/ahem.css" />
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<style>
+@font-face {
+  font-family: 'AhemOverride';
+  src: url(/fonts/Ahem.ttf);
+  ascent-override: 200%;
+  descent-override: 200%;
+  line-gap-override: 200%;
+}
+
+#target {
+  font-family: 'AhemOverride';
+  font-size: 20px;
+}
+
+#child {
+  width: 10em;
+}
+</style>
+<div id="target">
+  <div id="child"></div>
+</div>
+<script>
+test(() => {
+  const target = document.getElementById("target");
+  const child = document.getElementById("child");
+
+  const targetStyle = getComputedStyle(target);
+  const childStyle = getComputedStyle(child);
+
+  assert_equals(targetStyle.fontSize, "20px", "computed font-size should be 20px");
+  assert_equals(childStyle.width, "200px", "computed width (10em) should be 200px");
+}, "ascent-override, descent-override, and line-gap-override do not affect the computation of font-size or font-relative lengths");
+</script>

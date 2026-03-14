@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<title>Support for font-size descriptor in @font-face</title>
+<link rel="help" href="https://drafts.csswg.org/css-fonts/">
+<meta name="assert" content="The @font-face rule must support the font-size descriptor.">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<style id="testStyle"></style>
+<script>
+test(() => {
+  const sheet = document.getElementById("testStyle").sheet;
+  sheet.insertRule("@font-face { font-size: 16px; }", 0);
+  const rule = sheet.cssRules[0];
+  assert_equals(rule.style.getPropertyValue("font-size"), "16px", "The font-size descriptor value should be correctly parsed and returned.");
+}, "The @font-face rule must support the font-size descriptor.");
+</script>

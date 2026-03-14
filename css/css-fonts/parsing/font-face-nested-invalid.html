@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Nested @font-face is invalid</title>
+<link rel="help" href="https://drafts.csswg.org/css-fonts/">
+<meta name="assert" content="If an @font-face rule is declared nested within a CSS selector, it must be treated as invalid.">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script>
+test(() => {
+  const style = document.createElement("style");
+  style.textContent = "div { @font-face { font-family: 'Test'; src: url(font.ttf); } }";
+  document.head.appendChild(style);
+
+  const rules = style.sheet.cssRules;
+  assert_equals(rules.length, 1, "The outer div rule should be parsed.");
+
+  const divRule = rules[0];
+  assert_true(divRule instanceof CSSStyleRule, "The parsed rule should be a CSSStyleRule.");
+
+  if (divRule.cssRules) {
+    assert_equals(divRule.cssRules.length, 0, "The nested @font-face rule should be dropped or treated as invalid.");
+  }
+}, "If an @font-face rule is declared nested within a CSS selector, it must be treated as invalid.");
+</script>

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>@font-face without src is invalid</title>
+<link rel="help" href="https://drafts.csswg.org/css-fonts/">
+<meta name="assert" content="If the src descriptor is omitted, the @font-face rule must be considered invalid.">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script>
+test(() => {
+  // 1. Insert a stylesheet with `@font-face { font-family: 'Test'; }`.
+  const style = document.createElement("style");
+  style.textContent = "@font-face { font-family: 'Test'; }";
+  document.head.appendChild(style);
+
+  // 2. Check document.styleSheets[0].cssRules.
+  const rules = style.sheet.cssRules;
+
+  // The rule should not be parsed or should be considered invalid (cssRules.length === 0).
+  assert_equals(rules.length, 0, "The rule should not be parsed or should be considered invalid (cssRules.length === 0).");
+}, "If the src descriptor is omitted, the @font-face rule must be considered invalid.");
+</script>

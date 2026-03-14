@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CSS Fonts 5: superscript and subscript overrides with percentage</title>
+<link rel="help" href="https://drafts.csswg.org/css-fonts-5/#descdef-font-face-superscript-position-override">
+<link rel="match" href="font-face-superscript-subscript-percentage-override-ref.html">
+<meta name="assert" content="When superscript-position-override, subscript-position-override, superscript-size-override, or subscript-size-override is set to a <percentage>, the corresponding metric must be replaced by the specified percentage multiplied by the used font size.">
+<style>
+@font-face {
+  font-family: custom-font;
+  src: url(/fonts/Ahem.ttf);
+  superscript-position-override: 50%;
+  subscript-position-override: 50%;
+  superscript-size-override: 50%;
+  subscript-size-override: 50%;
+}
+.test {
+  font-family: custom-font;
+  font-size: 100px;
+  line-height: 1;
+}
+.super {
+  font-variant-position: super;
+}
+.sub {
+  font-variant-position: sub;
+}
+</style>
+</head>
+<body>
+  <p>Test passes if the black boxes match identically.</p>
+  <div class="test">
+    <span class="super">X</span><span class="sub">X</span>
+  </div>
+</body>
+</html>
