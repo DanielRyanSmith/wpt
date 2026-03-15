@@ -146,6 +146,7 @@ async_test(t => {
 ### 5.2 Testing for Exceptions
 *   **Synchronous**: `assert_throws_js(ErrorType, () => { ... })` or `assert_throws_dom("IndexSizeError", () => { ... })`.
 *   **Promises**: `promise_rejects_js(t, ErrorType, promise)` or `promise_rejects_dom(t, "NetworkError", promise)`.
+*   **Exact Object Instances**: Use `assert_throws_exactly(exception, () => { ... })` or `promise_rejects_exactly(t, exception, promise)` when verifying that the exact same exception object instance is thrown, rather than just matching the type or name.
 
 ---
 
@@ -183,6 +184,8 @@ promise_test(async t => {
   document.body.addEventListener('click', () => {}, { once: true, signal });
 }, 'AbortSignal example');
 ```
+
+When a test requires providing an already-aborted signal or a signal that aborts after a specific duration, prefer using the static `AbortSignal.abort(reason)` or `AbortSignal.timeout(ms)` methods instead of manually instantiating an `AbortController`.
 
 ### 6.5 Fetching JSON Data
 Use the helper `fetch_json('data.json')` instead of `fetch('data.json').then(r => r.json())`. This ensures compatibility with environments where `fetch()` is not exposed, such as `ShadowRealm`.
