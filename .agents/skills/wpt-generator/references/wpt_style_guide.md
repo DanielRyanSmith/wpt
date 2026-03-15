@@ -81,13 +81,16 @@ Link to the relevant specification. This is required for CSS tests and highly re
     // https://www.w3.org/TR/css-flexbox-1/#flex-direction-property
     ```
 
-### 2.3 Test Assertions
+### 2.3 Author Tags
+While many existing WPT files include `<link rel="author" title="..." href="...">` tags, **you MUST omit author tags** when generating tests autonomously. Do not attribute the test to "Gemini", "AI", or yourself.
+
+### 2.4 Test Assertions
 Use a `<meta name="assert">` tag to provide a concise description of what the test is verifying.
 ```html
 <meta name="assert" content="Checks that flex-direction: row-reverse correctly mirrors the main axis.">
 ```
 
-### 2.4 Timeouts
+### 2.5 Timeouts
 Execution of tests is subject to a global timeout (default 10s). Long-running tests may opt into a longer timeout (60s) by providing a `<meta>` element:
 ```html
 <meta name="timeout" content="long">
@@ -99,7 +102,7 @@ Execution of tests is subject to a global timeout (default 10s). Long-running te
 
 ### 3.1 Be Short and Focused
 Tests should be as minimal as possible to reduce parsing overhead and focus exactly on the tested behavior.
-*   **Minimize DOM Depth:** Avoid deeply nested or redundant HTML scaffolding. Use CSS pseudo-elements (`::before`/`::after`) instead of dedicated DOM nodes (`<div>`) whenever possible for visual effects or triggers (like stacking context backgrounds or positioning anchors).
+*   **Minimize DOM Depth:** Avoid deeply nested or redundant HTML scaffolding. Use CSS pseudo-elements (`::before`/`::after`) attached to existing structural elements instead of creating new, empty, dedicated DOM nodes (`<div>` or `<span>`) purely to host them. This applies broadly to visual effects, stacking context triggers, or testing pseudo-element behaviors themselves.
 *   **Omit Optional Tags:** Do not include `<html>`, `<head>`, or `<body>` tags unless the test logic strictly relies on them or you need to attach attributes to them.
 *   Ensure the test only verifies the specific feature intended, omitting unrelated properties or styles.
 

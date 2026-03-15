@@ -59,6 +59,14 @@ Before creating a new reference file, **you MUST check if an existing reference 
 - Look for standard WPT shared references (e.g., `../reference/ref-filled-green-100px-square.xht`).
 - If an existing file produces the exact same visual rendering (e.g., a simple green square or a blank white page), link to it using `<link rel="match" href="...">` instead of creating a new `-ref.html` file.
 
+### 3.1 Designing Tests for Reference Reuse
+
+**CRITICAL RULE:** Design your test's output to match an existing reference, rather than designing a bespoke reference to match your test's output.
+
+When testing multiple independent permutations (e.g., verifying that `display: none` and `content: none` both have no effect on a property), **do not** generate independent, sequential visual outputs for each permutation (e.g., outputting `1`, `1`, `1` in a list). This anti-pattern forces the creation of a bespoke, duplicate reference file.
+
+Instead, consolidate the permutations sequentially into a single layout that evaluates to a standard output (e.g., a final integer like `7`, or a single green square). Let each permutation attempt its operation; if they behave correctly, the final evaluated state should match an already existing reference (like `counter-7-ref.html` or a generic green square).
+
 ## 4. The Golden Rule of References
 
 **References must be simple.** If you are testing CSS Grid, your reference should use absolute positioning, floats, or simple block layout to achieve the same visual result. This ensures that a failure in the reference doesn't cause a false positive or negative in the test.
@@ -69,7 +77,7 @@ Tests should be "self-describing" so a human can easily verify them.
 
 ### 5.1 Pruning Redundant Scaffolding (Crucial for Blueprints)
 When generating a Reftest from a blueprint, treat the `<pre_conditions>` as structural guidelines, not strict requirements. If the `<pre_conditions>` request multiple HTML elements (like a container with multiple children), but assigning explicit CSS dimensions or applying standard visual patterns (like a single 100x100 green square) makes some of those requested DOM elements visually or geometrically redundant, you **MUST** remove them to minimize boilerplate. Do not blindly copy HTML elements from a blueprint or from legacy "Golden Examples" if they do not participate in the layout or the interaction being tested.
-- **Prefer Pseudo-Elements:** For "Red-Under-Green" or stacking context triggers, use CSS pseudo-elements (`::before` / `::after`) attached to the target element rather than adding explicit child or sibling DOM nodes.
+- **Prefer Pseudo-Elements:** Whenever a test requires verifying a behavior on pseudo-elements, or for visual tricks like "Red-Under-Green" and stacking context triggers, you MUST attach those pseudo-elements directly to pre-existing structural container nodes. Do not introduce new, dedicated, empty DOM elements purely to host them.
 
 - **The Green Square**: A very common pattern. The test passes if it produces a 100x100 green square.
 - **Color Meanings**:

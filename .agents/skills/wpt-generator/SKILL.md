@@ -15,6 +15,7 @@ Extract the following elements from the `<test_suggestion>` XML snippet provided
 - `<web_feature_id>`: Used to find where the test should live.
 - `<title>`: Descriptive title for the test.
 - `<description>`: The underlying requirement or specification behavior to test.
+- `<spec_url>` (can be multiple): A link to the specification. You MUST include these exact URLs in the generated test (using `<link rel="help" href="...">` for HTML tests, or as a single-line comment for `.js` tests).
 
 ### 2. Locate the Test Directory
 Determine where this test belongs in the repository by finding the corresponding `WEB_FEATURES.yml` file.
@@ -39,7 +40,8 @@ Before creating a new file, rigorously check if the test logic belongs in existi
 1. **Analyze Directory Paradigms:** Check if the target directory splits tests by category (e.g., separating valid vs. invalid values, or computed vs. parsing behavior).
 2. **Split the Blueprint if Necessary:** A single XML blueprint might encompass multiple test categories. If the directory separates testing into distinct files (e.g., `feature-valid.html` and `feature-invalid.html`), **you MUST split the test logic across the respective existing files** rather than creating a single, monolithic new file.
 3. **Append to Existing Files:** Read the logically matching file(s). If they are `testharness` tests, append your new test blocks to them.
-4. **Create New Only When Necessary:** Only if no logical match is found (even after considering splitting), plan to create a new file. **Consult `references/wpt_style_guide.md` to determine the correct filename extension and suffixes** (e.g., `.html`, `.window.js`, `.any.js`) based on your chosen test type. Name the file logically based on the `<title>` or `<web_feature_id>`.
+4. **Reftest Reference Search:** If you selected **Reftest**, you MUST search the target directory (and any `reference/` subdirectories) for existing reusable reference files (e.g., `ref-filled-green-100px-square.xht`) before deciding to create a new one. Do NOT generate a duplicate reference file if a suitable one exists.
+5. **Create New Only When Necessary:** Only if no logical match is found (even after considering splitting), plan to create a new file. **Consult `references/wpt_style_guide.md` to determine the correct filename extension and suffixes** (e.g., `.html`, `.window.js`, `.any.js`) based on your chosen test type. Name the file logically based on the `<title>` or `<web_feature_id>`.
 
 ### 5. Load References & Generate the Test
 **Before writing any code**, you MUST read the appropriate style guides to ensure correct formatting and syntax:
@@ -50,7 +52,11 @@ Before creating a new file, rigorously check if the test logic belongs in existi
 
 Write the appropriate WPT test to strictly satisfy the `<description>`:
 - **CRITICAL RULE: Style Guides > Golden Examples:** Existing tests ("Golden Examples") often contain legacy code and violate current best practices. **You MUST prioritize the explicit rules in the style guides over the paradigms found in surrounding files.** Do not blindly copy outdated instantiation patterns (e.g., manual `AbortController` setups instead of `AbortSignal.abort()`, unbounded polling instead of sentinels). Use existing files to understand the *domain logic*, but rely exclusively on the style guides for the *implementation syntax*.
-- **Deduce Expectations:** Carefully deduce the exact pass/fail condition and assertions from the `<description>`.
+- **Omit HTML Boilerplate:** Unless the test strictly requires attaching attributes to the root elements, you MUST omit standard `<html>`, `<head>`, and `<body>` tags in your generated `.html` files (including references) to keep tests focused and concise, even if "Golden Examples" include them. Start directly with `<!DOCTYPE html>` and `<meta charset="utf-8">`.
+- **Deduce Expectations:** Carefully deduce the exact pass/fail condition and assertions from the `<description>`. If the requirement is highly complex or vague, use the `fetch_spec.py` script (found in your `<available_resources>` panel) to fetch the `<spec_url>` text to gain deeper context before writing the test.
+   ```bash
+   python3 <absolute_path_to_fetch_spec.py> "<spec_url>"
+   ```
 - **CRITICAL RULE: Domain Helpers > Golden Examples:** Check if a built-in helper exists in the local `resources/` directory to avoid repetitive boilerplate. Even if your "Golden Example" writes out boilerplate logic manually (e.g., manually polling, fetching, resolving a sequence of events, or establishing positive controls), you MUST aggressively replace that boilerplate if a higher-level abstraction exists in a local helper file. Read and fully comprehend the helper functions imported by your Golden Examples. If testing CSS property animatability, interpolation, or discrete flips: See [css_animations.md](references/css_animations.md) and use helpers like `test_not_animatable()`.
 - **Implementation:** Write the test logic, setup, and assertions autonomously. **CRITICAL:** When generating tests for multiple permutations or variations of an API, you MUST NOT write flat, repetitive test blocks. You MUST adhere to the Data-Driven Testing mandate in `testharness_style_guide.md` using arrays and loops. *Note: If the target directory lacks examples of your chosen Test Type, rely entirely on the style guides.*
 
