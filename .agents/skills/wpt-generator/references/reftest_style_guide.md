@@ -4,7 +4,11 @@ This guide provides a comprehensive overview of best practices for writing high-
 
 ## 1. Anatomy of a Reftest
 
-A reftest consists of at least two files: the test file and the reference file.
+A reftest requires at least two files: the test file and the reference file. 
+
+**CRITICAL RULE FOR AI GENERATION:** Before writing a new reference file, you MUST rigorously search the target directory (and its `reference/` subdirectories) for existing reference files that match your expected output (e.g., `ref-filled-green-100px-square.xht`). 
+- **If a suitable reference exists:** Use a `<link rel="match">` tag pointing to that existing file. Do NOT generate a duplicate reference file.
+- **If NO suitable reference exists:** You MUST generate BOTH your new test file AND a new reference file (e.g., `my-test-ref.html`). Never create a `<link rel="match" href="ref.html">` tag without ensuring `ref.html` actually exists!
 
 ### The Test File
 The test file employs the technology being tested. It must include a `<link>` element that points to the reference file.

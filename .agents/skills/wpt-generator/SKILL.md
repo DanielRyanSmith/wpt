@@ -18,9 +18,9 @@ Extract the following elements from the `<test_suggestion>` XML snippet provided
 
 ### 2. Locate the Test Directory
 Determine where this test belongs in the repository by finding the corresponding `WEB_FEATURES.yml` file.
-1. Run the provided Python script:
+1. Run the `find_feature_tests.py` script. **Important:** Do not run `python3 scripts/...` from the repository root. You must use the absolute path to `find_feature_tests.py` provided in the `<available_resources>` panel of your activated skill:
    ```bash
-   python3 scripts/find_feature_tests.py <web_feature_id> .
+   python3 <absolute_path_to_find_feature_tests.py> <web_feature_id> .
    ```
 2. Review the output to determine the target directory.
 
@@ -50,7 +50,24 @@ Write the appropriate WPT test to strictly satisfy the `<description>`:
 - **Domain-Specific Helpers:** Check if a built-in helper exists to avoid repetitive boilerplate. If testing CSS property animatability, interpolation, or discrete flips: See [css_animations.md](references/css_animations.md) and use helpers like `test_not_animatable()`.
 - **Implementation:** Write the test logic, setup, and assertions autonomously. Mirror the style, structure, and imports of the "Golden Examples". *Note: If the target directory lacks examples of your chosen Test Type, rely heavily on the style guides.*
 
-### 6. Final Checks
+### 6. Validation & Self-Correction (CRITICAL)
+Before completing the task, you MUST validate that the code you generated is syntactically correct, properly formatted, and functions as intended.
+
+1. **Linting:** Run the WPT linter on the file you created/modified:
+   ```bash
+   ./wpt lint <path_to_file>
+   ```
+   - If the linter reports errors (e.g., `TRAILING WHITESPACE`, `INDENT TABS`), you MUST use `replace` or `sed` to fix the errors and re-run the linter until it passes cleanly.
+
+2. **Execution (Testharness & Crashtests Only):** If you generated a Testharness or Crashtest, you MUST run it using the headless browser runner with the mach logger for cleaner output:
+   ```bash
+   ./wpt run chrome <path_to_file> --headless --log-mach=-
+   ```
+   - **Analyze the Output:** Read the test runner's output carefully.
+   - **Self-Correct:** If the runner reports a `Harness Error`, `SyntaxError`, a timeout, or a failure that indicates a flaw in your test logic (e.g., calling an undefined helper function or making an incorrect assertion), you MUST open the file, fix the bug, and re-run the test.
+   - Repeat this execute-and-fix loop until the test executes successfully without syntax or harness errors. **Maximum 3 attempts.** If the test still fails after 3 correction attempts, stop debugging and proceed to finalize. *(Note: If the test fails because the browser genuinely does not support the feature, that is acceptable—your goal is to ensure the **test code** itself is valid.)*
+
+### 7. Finalizing
 - Ensure standard WPT scripts are included properly (if applicable) using absolute paths from the root server.
 - Ensure crashtests end with `-crash.html` if creating a new crashtest file.
 - Do not check in or commit files unless explicitly requested.
