@@ -25,10 +25,11 @@ Determine where this test belongs in the repository by finding the corresponding
 2. Review the output to determine the target directory.
 
 ### 3. Research Existing Paradigms & Determine Test Type
-Since you are not provided with explicit steps or a test type, you MUST research how similar tests are written in this specific directory.
+Since you are not provided with explicit steps or a test type, you MUST research how similar tests are written for this feature, both in the target directory and across the broader codebase. **Avoid "Tunnel Vision":** Do not restrict your research solely to the output of `find_feature_tests.py`.
 1. Use `run_shell_command` or `grep_search` to list existing tests in the target directory.
-2. Read 1 or 2 existing tests that seem related to the `<description>`. Treat these as "Golden Examples".
-3. Based on the requirement and the golden examples, decide on the best **Test Type**:
+2. Broaden your search: Grep the entire repository (or related parent directories) for the API name or feature (e.g., `fetchLater`) to find existing test ecosystems, helper files (`resources/`), or data-driven testing paradigms that might live in adjacent directories.
+3. Read 1 or 2 existing tests that seem related to the `<description>`. Treat these as "Golden Examples", especially noting if they utilize shared helper scripts or array-driven testing loops.
+4. Based on the requirement and the golden examples, decide on the best **Test Type**:
    - **Testharness test**: Best for JS APIs, parsing, DOM manipulation, or computed CSS values.
    - **Reftest**: Best for visual/rendering layout matching.
    - **Crashtest**: Best for ensuring no browser crash occurs.
@@ -48,9 +49,10 @@ Before creating a new file, rigorously check if the test logic belongs in existi
 - If Crashtest: See [crashtest_style_guide.md](references/crashtest_style_guide.md)
 
 Write the appropriate WPT test to strictly satisfy the `<description>`:
+- **CRITICAL RULE: Style Guides > Golden Examples:** Existing tests ("Golden Examples") often contain legacy code and violate current best practices. **You MUST prioritize the explicit rules in the style guides over the paradigms found in surrounding files.** Do not blindly copy outdated instantiation patterns (e.g., manual `AbortController` setups instead of `AbortSignal.abort()`, unbounded polling instead of sentinels). Use existing files to understand the *domain logic*, but rely exclusively on the style guides for the *implementation syntax*.
 - **Deduce Expectations:** Carefully deduce the exact pass/fail condition and assertions from the `<description>`.
-- **Domain-Specific Helpers:** Check if a built-in helper exists to avoid repetitive boilerplate. If testing CSS property animatability, interpolation, or discrete flips: See [css_animations.md](references/css_animations.md) and use helpers like `test_not_animatable()`.
-- **Implementation:** Write the test logic, setup, and assertions autonomously. While mirroring the general style and imports of the "Golden Examples", you MUST critically evaluate and modernize their structure to minimize HTML boilerplate. *Note: If the target directory lacks examples of your chosen Test Type, rely heavily on the style guides.*
+- **CRITICAL RULE: Domain Helpers > Golden Examples:** Check if a built-in helper exists in the local `resources/` directory to avoid repetitive boilerplate. Even if your "Golden Example" writes out boilerplate logic manually (e.g., manually polling, fetching, resolving a sequence of events, or establishing positive controls), you MUST aggressively replace that boilerplate if a higher-level abstraction exists in a local helper file. Read and fully comprehend the helper functions imported by your Golden Examples. If testing CSS property animatability, interpolation, or discrete flips: See [css_animations.md](references/css_animations.md) and use helpers like `test_not_animatable()`.
+- **Implementation:** Write the test logic, setup, and assertions autonomously. **CRITICAL:** When generating tests for multiple permutations or variations of an API, you MUST NOT write flat, repetitive test blocks. You MUST adhere to the Data-Driven Testing mandate in `testharness_style_guide.md` using arrays and loops. *Note: If the target directory lacks examples of your chosen Test Type, rely entirely on the style guides.*
 
 ### 6. Validation & Self-Correction (CRITICAL)
 Before completing the task, you MUST validate that the code you generated is syntactically correct, properly formatted, and functions as intended.

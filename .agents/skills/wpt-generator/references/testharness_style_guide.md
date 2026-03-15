@@ -136,6 +136,34 @@ async_test(t => {
 *   **Concurrency:** `testharness.js` doesn't impose scheduling on async tests; they run whenever step functions are invoked. Multiple tests in the same global can run concurrently. Take care not to let them interfere with each other.
 *   **Unreached Code:** For asynchronous callbacks that should never execute, use `t.unreached_func("Reason")`.
 
+### 4.4 Data-Driven Testing (Parameterization) - **CRITICAL MANDATE**
+When testing multiple permutations of an API (e.g., testing different method signatures like an object vs. an initializer dictionary, testing combinations of options, or iterating over a list of valid/invalid inputs), you **MUST NOT** copy-paste identical `test()` or `promise_test()` blocks. 
+
+Instead, you **MUST** use a **data-driven approach**. Define an array of test cases (`const testCases = [...]`) and iterate over them using a loop (e.g., `for (const { ... } of testCases)`) to dynamically generate the `test()` or `promise_test()` blocks. This removes redundant JavaScript boilerplate, ensures consistent coverage across all permutations (e.g., testing both `AbortError` and a custom error for every scenario), and makes the test ecosystem scalable and maintainable.
+
+**Example of Parameterization:**
+```javascript
+const customError = new Error('custom');
+const testCases = [
+  { desc: 'Request object', getArgs: (signal) => [new Request('/', { signal })] },
+  { desc: 'URL and init object', getArgs: (signal) => ['/', { signal }] }
+];
+
+for (const { desc, getArgs } of testCases) {
+  test(() => {
+    const controller = new AbortController();
+    controller.abort(customError);
+    assert_throws_exactly(customError, () => myApi(...getArgs(controller.signal)));
+  }, `myApi() throws custom reason when called with aborted ${desc}`);
+
+  test(() => {
+    const controller = new AbortController();
+    controller.abort();
+    assert_throws_dom("AbortError", () => myApi(...getArgs(controller.signal)));
+  }, `myApi() throws AbortError when called with aborted ${desc} without specific reason`);
+}
+```
+
 ---
 
 ## 5. Assertions and Exception Testing
@@ -149,6 +177,30 @@ async_test(t => {
 *   **Synchronous**: `assert_throws_js(ErrorType, () => { ... })` or `assert_throws_dom("IndexSizeError", () => { ... })`.
 *   **Promises**: `promise_rejects_js(t, ErrorType, promise)` or `promise_rejects_dom(t, "NetworkError", promise)`.
 *   **Exact Object Instances**: Use `assert_throws_exactly(exception, () => { ... })` or `promise_rejects_exactly(t, exception, promise)` when verifying that the exact same exception object instance is thrown, rather than just matching the type or name.
+
+### 5.3 Asynchronous Negative Assertions (Sentinel Pattern)
+When testing that an asynchronous event (like a network request, a fired event, or a DOM mutation) did *not* occur, **DO NOT** use unbounded polling for a negative state (e.g., polling until a timeout to prove an array length is `0`). This forces the test runner to wait for the maximum timeout, artificially inflating test suite execution time.
+
+Instead, you **MUST** use the **Sentinel Pattern** (a positive control):
+1. Perform the action that should *not* cause the side-effect.
+2. Immediately perform a secondary, guaranteed-to-succeed action (the "sentinel") that triggers the same tracker.
+3. Assert that the tracker receives *exactly* the expected state from the sentinel action alone.
+
+This guarantees instant test success if the negative condition holds, and instant failure if the forbidden side-effect incorrectly occurs.
+
+**Example (Network Request):**
+```javascript
+// BAD: Polling for 0 forces a 3+ second timeout on success.
+controller.abort();
+await expectBeacon(uuid, { count: 0 }); 
+
+// GOOD: Sentinel pattern returns instantly on success.
+controller.abort();
+// 1. Fire a sentinel request that we know will succeed.
+fetchLater(url, { method: 'POST' }); 
+// 2. We now expect EXACTLY 1 beacon (the sentinel) to arrive.
+await expectBeacon(uuid, { count: 1 });
+```
 
 ---
 
@@ -193,7 +245,19 @@ promise_test(async t => {
 }, 'AbortSignal example');
 ```
 
-When a test requires providing an already-aborted signal or a signal that aborts after a specific duration, prefer using the static `AbortSignal.abort(reason)` or `AbortSignal.timeout(ms)` methods instead of manually instantiating an `AbortController`.
+**Pre-aborted Signals:** When a test requires providing an already-aborted signal or a signal that aborts after a specific duration, you **MUST** use the static `AbortSignal.abort(reason)` or `AbortSignal.timeout(ms)` methods. **DO NOT** manually instantiate an `AbortController` just to abort it.
+
+**Example (BAD - Legacy):**
+```javascript
+const controller = new AbortController();
+controller.abort(customReason);
+doSomething({ signal: controller.signal });
+```
+
+**Example (GOOD - Modern):**
+```javascript
+doSomething({ signal: AbortSignal.abort(customReason) });
+```
 
 ### 6.6 Fetching JSON Data
 Use the helper `fetch_json('data.json')` instead of `fetch('data.json').then(r => r.json())`. This ensures compatibility with environments where `fetch()` is not exposed, such as `ShadowRealm`.
