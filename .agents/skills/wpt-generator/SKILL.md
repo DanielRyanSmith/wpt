@@ -33,10 +33,12 @@ Since you are not provided with explicit steps or a test type, you MUST research
    - **Reftest**: Best for visual/rendering layout matching.
    - **Crashtest**: Best for ensuring no browser crash occurs.
 
-### 4. Determine the Appropriate File & Name
-Before creating a new file, rigorously check if the test logically belongs in an existing file.
-1. If your research reveals an existing file that logically groups the exact same feature/behavior (e.g., a shared `parsing.html` file), read it. If it's a `testharness` test, append your new test block to it.
-2. If no logical match is found, plan to create a new file. **Consult `references/wpt_style_guide.md` to determine the correct filename extension and suffixes** (e.g., `.html`, `.window.js`, `.any.js`) based on your chosen test type. Name the file logically based on the `<title>` or `<web_feature_id>`.
+### 4. Determine the Appropriate File(s) & Name
+Before creating a new file, rigorously check if the test logic belongs in existing files. **Minimize boilerplate by reusing existing files whenever possible.**
+1. **Analyze Directory Paradigms:** Check if the target directory splits tests by category (e.g., separating valid vs. invalid values, or computed vs. parsing behavior).
+2. **Split the Blueprint if Necessary:** A single XML blueprint might encompass multiple test categories. If the directory separates testing into distinct files (e.g., `feature-valid.html` and `feature-invalid.html`), **you MUST split the test logic across the respective existing files** rather than creating a single, monolithic new file.
+3. **Append to Existing Files:** Read the logically matching file(s). If they are `testharness` tests, append your new test blocks to them.
+4. **Create New Only When Necessary:** Only if no logical match is found (even after considering splitting), plan to create a new file. **Consult `references/wpt_style_guide.md` to determine the correct filename extension and suffixes** (e.g., `.html`, `.window.js`, `.any.js`) based on your chosen test type. Name the file logically based on the `<title>` or `<web_feature_id>`.
 
 ### 5. Load References & Generate the Test
 **Before writing any code**, you MUST read the appropriate style guides to ensure correct formatting and syntax:
@@ -48,7 +50,7 @@ Before creating a new file, rigorously check if the test logically belongs in an
 Write the appropriate WPT test to strictly satisfy the `<description>`:
 - **Deduce Expectations:** Carefully deduce the exact pass/fail condition and assertions from the `<description>`.
 - **Domain-Specific Helpers:** Check if a built-in helper exists to avoid repetitive boilerplate. If testing CSS property animatability, interpolation, or discrete flips: See [css_animations.md](references/css_animations.md) and use helpers like `test_not_animatable()`.
-- **Implementation:** Write the test logic, setup, and assertions autonomously. Mirror the style, structure, and imports of the "Golden Examples". *Note: If the target directory lacks examples of your chosen Test Type, rely heavily on the style guides.*
+- **Implementation:** Write the test logic, setup, and assertions autonomously. While mirroring the general style and imports of the "Golden Examples", you MUST critically evaluate and modernize their structure to minimize HTML boilerplate. *Note: If the target directory lacks examples of your chosen Test Type, rely heavily on the style guides.*
 
 ### 6. Validation & Self-Correction (CRITICAL)
 Before completing the task, you MUST validate that the code you generated is syntactically correct, properly formatted, and functions as intended.
@@ -59,9 +61,9 @@ Before completing the task, you MUST validate that the code you generated is syn
    ```
    - If the linter reports errors (e.g., `TRAILING WHITESPACE`, `INDENT TABS`), you MUST use `replace` or `sed` to fix the errors and re-run the linter until it passes cleanly.
 
-2. **Execution (Testharness & Crashtests Only):** If you generated a Testharness or Crashtest, you MUST run it using the headless browser runner with the mach logger for cleaner output:
+2. **Execution:** You MUST run it using the headless browser runner:
    ```bash
-   ./wpt run chrome <path_to_file> --headless --log-mach=-
+   ./wpt run chrome <path_to_file> --headless
    ```
    - **Analyze the Output:** Read the test runner's output carefully.
    - **Self-Correct:** If the runner reports a `Harness Error`, `SyntaxError`, a timeout, or a failure that indicates a flaw in your test logic (e.g., calling an undefined helper function or making an incorrect assertion), you MUST open the file, fix the bug, and re-run the test.
@@ -70,4 +72,5 @@ Before completing the task, you MUST validate that the code you generated is syn
 ### 7. Finalizing
 - Ensure standard WPT scripts are included properly (if applicable) using absolute paths from the root server.
 - Ensure crashtests end with `-crash.html` if creating a new crashtest file.
+- **Clean Up:** Explicitly delete any temporary prototype files, scripts, or intermediate files you created during the research, testing, or debugging phases to keep the repository clean.
 - Do not check in or commit files unless explicitly requested.

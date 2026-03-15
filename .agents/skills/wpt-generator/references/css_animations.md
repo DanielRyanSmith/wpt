@@ -3,20 +3,24 @@
 When writing tests in WPT that verify whether a CSS property is animatable or how its values interpolate, **do not manually write out the steps to set up transitions or the Web Animations API (WAAPI)**. Instead, use the robust testing framework located at `/css/support/interpolation-testcommon.js`.
 
 ## Including the Framework
-Prefer the **JavaScript-Only Test** format (e.g., `my-test.window.js`) for animation tests to avoid redundant HTML boilerplate. Include the script using metadata:
+**Important:** Tests inside the `css/` directory are subject to strict linting rules (specifically the `MISSING-LINK` rule) that require an explicit `<link rel="help" href="...">` HTML tag. Therefore, **you MUST use the standard HTML format (`.html`)** instead of the JavaScript-only format (`.window.js`) for CSS tests to pass the linter.
 
-```javascript
-// META: title=My Animation Test
-// META: script=/css/support/interpolation-testcommon.js
-// https://drafts.csswg.org/css-align/
-```
-
-If your test strictly requires a custom DOM structure that cannot be generated dynamically, use an HTML file and include the script after `testharness.js`:
+Include the script after `testharness.js`:
 
 ```html
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>My Animation Test</title>
+<link rel="help" href="https://drafts.csswg.org/css-align/">
+<meta name="assert" content="Description of assertion.">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <script src="/css/support/interpolation-testcommon.js"></script>
+<body>
+<script>
+// Your animation test code here
+</script>
+</body>
 ```
 
 ## `test_not_animatable(options)`

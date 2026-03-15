@@ -22,8 +22,8 @@ Follow these steps to determine the correct filename suffix for a test. The goal
 
 #### Step 1: Choose the Base Extension
 Determine the primary file format based on the content of your test:
-- **`.html`**: Use for standard web-based tests (HTML/XHTML/SVG/XML).
-- **`.js`**: Use for pure JavaScript tests, especially if you want to use the automated boilerplate generation (see Step 4).
+- **`.html`**: Use for standard web-based tests (HTML/XHTML/SVG/XML). **Important:** If your test is located inside the `css/` directory, you **must** use `.html`. The WPT linter strictly enforces a `MISSING-LINK` rule for CSS tests that requires an explicit `<link rel="help" href="...">` HTML tag, which cannot be satisfied by JavaScript comments in a `.js` file.
+- **`.js`**: Use for pure JavaScript tests, especially if you want to use the automated boilerplate generation (see Step 4). Do not use this format for tests inside the `css/` directory.
 
 #### Step 2: Choose Test Feature Flags (Optional)
 If your test requires specific server features or environment settings, append these flags (preceded and followed by a `.`). These come **after** any test type flag.
@@ -98,9 +98,10 @@ Execution of tests is subject to a global timeout (default 10s). Long-running te
 ## 3. General Principles
 
 ### 3.1 Be Short and Focused
-Tests should be as minimal as possible.
-*   Avoid extraneous HTML tags (like `<html>` or `<body>` if they aren't strictly necessary).
-*   Ensure the test only verifies the specific feature intended.
+Tests should be as minimal as possible to reduce parsing overhead and focus exactly on the tested behavior.
+*   **Minimize DOM Depth:** Avoid deeply nested or redundant HTML scaffolding. Use CSS pseudo-elements (`::before`/`::after`) instead of dedicated DOM nodes (`<div>`) whenever possible for visual effects or triggers (like stacking context backgrounds or positioning anchors).
+*   **Omit Optional Tags:** Do not include `<html>`, `<head>`, or `<body>` tags unless the test logic strictly relies on them or you need to attach attributes to them.
+*   Ensure the test only verifies the specific feature intended, omitting unrelated properties or styles.
 
 ### 3.2 Be Conservative
 Avoid depending on edge-case behavior of unrelated features.

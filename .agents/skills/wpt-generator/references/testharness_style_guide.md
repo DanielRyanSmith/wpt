@@ -17,6 +17,8 @@ WPT supports several ways to structure your tests. Prefer the simplest format th
 ### 2.1 JavaScript-Only Tests (Recommended)
 These formats **automatically generate** the necessary HTML boilerplate.
 
+**CRITICAL MANDATE:** You **MUST** default to creating a `.window.js`, `.any.js`, or `.worker.js` file and use dynamic DOM generation (via `document.createElement()`) rather than creating an `.html` file, **UNLESS** you are creating a test within the `css/` directory. The CSS build tool (`test.csswg.org`) does not support `wptserve` automatic boilerplate generation or `.window.js` files, and requires a `<link rel="help">` tag. Therefore, for all CSS tests, you must stick with the `.html` equivalent.
+
 *   **`.window.js`**: Runs in a standard Window environment.
 *   **`.worker.js`**: Runs in a Dedicated Worker.
 *   **`.any.js`**: Runs in multiple global scopes (default: Window and Dedicated Worker). You can customize this using metadata.
@@ -165,8 +167,8 @@ promise_test(async t => {
 ```
 
 ### 6.2 Pre-conditions and Scaffolding
-Avoid writing static HTML scaffolding (e.g., `<div id="container"></div>`) directly into the `<body>` of HTML test files just to satisfy general preconditions. 
-*   **Prefer Dynamic Setup:** Dynamically generate necessary elements within the JavaScript test loop (`document.createElement()`) and append them to `document.body`.
+Avoid writing redundant static HTML scaffolding (e.g., `<div id="container"></div>`) directly into the `<body>` of HTML test files just to satisfy general preconditions. Do not blindly copy such legacy scaffolding from older "Golden Examples".
+*   **Prefer Dynamic Setup:** Dynamically generate necessary elements within the JavaScript test loop (`document.createElement()`), append them to `document.body`, and clean them up afterward.
 *   **Inline Data:** Map arrays or test scenarios inline to avoid polluting the global scope with intermediate variables.
 *   **Exception:** Only use static HTML structures if the exact feature being tested requires a strict DOM configuration to be parsed natively by the browser prior to script execution.
 
@@ -195,6 +197,11 @@ When a test requires providing an already-aborted signal or a signal that aborts
 
 ### 6.6 Fetching JSON Data
 Use the helper `fetch_json('data.json')` instead of `fetch('data.json').then(r => r.json())`. This ensures compatibility with environments where `fetch()` is not exposed, such as `ShadowRealm`.
+
+### 6.7 File Organization & Splitting (Valid vs. Invalid)
+When generating or appending to tests—especially for CSS parsing or API validation—observe the directory's existing paradigm. It is extremely common in WPT to separate tests for **valid** inputs from tests for **invalid** inputs into distinct files (e.g., `property-valid.html` and `property-invalid.html`).
+*   **Do not create a new monolithic file** with redundant boilerplate if you can logically split your test assertions and append them to these existing category files.
+*   **Split your logic:** If a single requirement dictates both valid and invalid behaviors, put the `test_valid_value` (or equivalent) assertions in the valid file, and the `test_invalid_value` assertions in the invalid file.
 
 ---
 

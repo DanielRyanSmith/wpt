@@ -68,22 +68,34 @@ Before creating a new reference file, **you MUST check if an existing reference 
 Tests should be "self-describing" so a human can easily verify them.
 
 ### 5.1 Pruning Redundant Scaffolding (Crucial for Blueprints)
-When generating a Reftest from a blueprint, treat the `<pre_conditions>` as structural guidelines, not strict requirements. If the `<pre_conditions>` request multiple HTML elements (like a container with multiple children), but assigning explicit CSS dimensions or applying standard visual patterns (like a single 100x100 green square) makes some of those requested DOM elements visually or geometrically redundant, you **MUST** remove them to minimize boilerplate. Do not blindly copy HTML elements from a blueprint if they do not participate in the layout or the stacking context interaction being tested.
+When generating a Reftest from a blueprint, treat the `<pre_conditions>` as structural guidelines, not strict requirements. If the `<pre_conditions>` request multiple HTML elements (like a container with multiple children), but assigning explicit CSS dimensions or applying standard visual patterns (like a single 100x100 green square) makes some of those requested DOM elements visually or geometrically redundant, you **MUST** remove them to minimize boilerplate. Do not blindly copy HTML elements from a blueprint or from legacy "Golden Examples" if they do not participate in the layout or the interaction being tested.
+- **Prefer Pseudo-Elements:** For "Red-Under-Green" or stacking context triggers, use CSS pseudo-elements (`::before` / `::after`) attached to the target element rather than adding explicit child or sibling DOM nodes.
 
 - **The Green Square**: A very common pattern. The test passes if it produces a 100x100 green square.
 - **Color Meanings**:
     - **Green**: Success.
-    - **Red**: Failure. Often placed *under* the test content so it only appears if something is misaligned.
+    - **Red**: Failure. Often placed *under* the test content so it only appears if something is misaligned or paints incorrectly.
     - **Black**: Descriptive text.
     - **Silver/Gray**: Irrelevant filler content.
 - **No Scrollbars**: Avoid scrollbars at an 800x600 window size unless testing scrolling itself.
 
-### Example: The Red-Under-Green Pattern
+### Example: The Optimized Red-Under-Green Pattern
 ```html
-<div style="width: 100px; height: 100px; background: red;">
-  <!-- This green box should perfectly cover the red box -->
-  <div style="width: 100px; height: 100px; background: green; margin-top: -100px;"></div>
-</div>
+<style>
+.test-box, .test-box::before {
+  width: 100px;
+  height: 100px;
+}
+.test-box {
+  background: green;
+}
+.test-box::before {
+  content: "";
+  position: absolute; /* or negative z-index depending on test goals */
+  background: red;
+}
+</style>
+<div class="test-box"></div>
 ```
 
 ## 6. Using the Ahem Font
