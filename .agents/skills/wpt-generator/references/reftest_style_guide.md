@@ -63,6 +63,9 @@ Before creating a new reference file, **you MUST check if an existing reference 
 
 Tests should be "self-describing" so a human can easily verify them.
 
+### 5.1 Pruning Redundant Scaffolding (Crucial for Blueprints)
+When generating a Reftest from a blueprint, treat the `<pre_conditions>` as structural guidelines, not strict requirements. If the `<pre_conditions>` request multiple HTML elements (like a container with multiple children), but assigning explicit CSS dimensions or applying standard visual patterns (like a single 100x100 green square) makes some of those requested DOM elements visually or geometrically redundant, you **MUST** remove them to minimize boilerplate. Do not blindly copy HTML elements from a blueprint if they do not participate in the layout or the stacking context interaction being tested.
+
 - **The Green Square**: A very common pattern. The test passes if it produces a 100x100 green square.
 - **Color Meanings**:
     - **Green**: Success.

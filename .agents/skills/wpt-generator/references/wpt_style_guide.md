@@ -71,10 +71,15 @@ All tests must be encoded in **UTF-8**.
 *   **Requirement**: Include `<meta charset="utf-8">` as the first tag in the `<head>` of HTML files.
 
 ### 2.2 Documentation Links
-Link to the relevant specification using `<link rel="help">`. This is required for CSS tests and highly recommended for all others.
-```html
-<link rel="help" href="https://www.w3.org/TR/css-flexbox-1/#flex-direction-property">
-```
+Link to the relevant specification. This is required for CSS tests and highly recommended for all others.
+*   **HTML Tests:** Use `<link rel="help" href="...">`.
+    ```html
+    <link rel="help" href="https://www.w3.org/TR/css-flexbox-1/#flex-direction-property">
+    ```
+*   **JavaScript-Only Tests (`.js`):** Use a standard single-line comment containing the URL.
+    ```javascript
+    // https://www.w3.org/TR/css-flexbox-1/#flex-direction-property
+    ```
 
 ### 2.3 Test Assertions
 Use a `<meta name="assert">` tag to provide a concise description of what the test is verifying.

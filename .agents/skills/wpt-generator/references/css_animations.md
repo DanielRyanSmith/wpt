@@ -3,7 +3,15 @@
 When writing tests in WPT that verify whether a CSS property is animatable or how its values interpolate, **do not manually write out the steps to set up transitions or the Web Animations API (WAAPI)**. Instead, use the robust testing framework located at `/css/support/interpolation-testcommon.js`.
 
 ## Including the Framework
-To use these helpers, include the script in your HTML file after `testharness.js`:
+Prefer the **JavaScript-Only Test** format (e.g., `my-test.window.js`) for animation tests to avoid redundant HTML boilerplate. Include the script using metadata:
+
+```javascript
+// META: title=My Animation Test
+// META: script=/css/support/interpolation-testcommon.js
+// https://drafts.csswg.org/css-align/
+```
+
+If your test strictly requires a custom DOM structure that cannot be generated dynamically, use an HTML file and include the script after `testharness.js`:
 
 ```html
 <script src="/resources/testharness.js"></script>

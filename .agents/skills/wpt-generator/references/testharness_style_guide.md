@@ -164,19 +164,25 @@ promise_test(async t => {
 }, "DOM cleanup example");
 ```
 
-### 6.2 Avoid Timers
+### 6.2 Pre-conditions and Scaffolding
+Avoid writing static HTML scaffolding (e.g., `<div id="container"></div>`) directly into the `<body>` of HTML test files just to satisfy general preconditions. 
+*   **Prefer Dynamic Setup:** Dynamically generate necessary elements within the JavaScript test loop (`document.createElement()`) and append them to `document.body`.
+*   **Inline Data:** Map arrays or test scenarios inline to avoid polluting the global scope with intermediate variables.
+*   **Exception:** Only use static HTML structures if the exact feature being tested requires a strict DOM configuration to be parsed natively by the browser prior to script execution.
+
+### 6.3 Avoid Timers
 **DO NOT** use `setTimeout` with a hardcoded delay to "wait" for something.
 *   **Wait for an event**: Use `EventWatcher` or a Promise.
 *   **Check a condition**: Use `t.step_wait(() => condition)`.
 *   **Necessary delays**: Use `t.step_timeout(callback, delay)`.
 
-### 6.3 Cross-Platform & Conservative
+### 6.4 Cross-Platform & Conservative
 *   **UTF-8**: Always use UTF-8 (and `<meta charset=utf-8>` in HTML).
 *   **Independence**: Tests should not rely on external network resources or specific fonts (use [Ahem](/docs/writing-tests/ahem.md) for font testing).
 *   **Short & Focused**: Keep tests as concise as possible. Avoid testing unrelated features.
 
 
-### 6.4 AbortSignal Support
+### 6.5 AbortSignal Support
 Use `t.get_signal()` to get an `AbortSignal` that is automatically aborted when the test finishes. This is highly recommended when testing APIs that support `AbortSignal` to automatically clean up event listeners or fetch requests.
 ```javascript
 promise_test(async t => {
@@ -187,7 +193,7 @@ promise_test(async t => {
 
 When a test requires providing an already-aborted signal or a signal that aborts after a specific duration, prefer using the static `AbortSignal.abort(reason)` or `AbortSignal.timeout(ms)` methods instead of manually instantiating an `AbortController`.
 
-### 6.5 Fetching JSON Data
+### 6.6 Fetching JSON Data
 Use the helper `fetch_json('data.json')` instead of `fetch('data.json').then(r => r.json())`. This ensures compatibility with environments where `fetch()` is not exposed, such as `ShadowRealm`.
 
 ---
