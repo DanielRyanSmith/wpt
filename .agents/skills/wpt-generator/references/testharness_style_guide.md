@@ -194,7 +194,12 @@ async_test(t => {
 ### 4.5 Data-Driven Testing (Parameterization) - **CRITICAL MANDATE**
 When testing multiple permutations of an API (e.g., testing different method signatures like an object vs. an initializer dictionary, testing combinations of options, or iterating over a list of valid/invalid inputs), you **MUST NOT** copy-paste identical `test()` or `promise_test()` blocks. 
 
+*Note: This data-driven mandate applies even when using built-in or domain-specific wrapper functions that internally call `test()` (e.g., `test_valid_rule()`, `test_valid_value()`, `idl_test()`). Do not write out a flat list of 20 wrapper calls; loop over an array of valid/invalid inputs instead.*
+
 Instead, you **MUST** use a **data-driven approach**. Define an array of test cases (`const testCases = [...]`) and iterate over them using a loop (e.g., `for (const { ... } of testCases)`) to dynamically generate the `test()` or `promise_test()` blocks. This removes redundant JavaScript boilerplate, ensures consistent coverage across all permutations (e.g., testing both `AbortError` and a custom error for every scenario), and makes the test ecosystem scalable and maintainable.
+
+#### 4.5.1 Modifying Existing Files (Matrix Expansion)
+When adding a new test case to an *existing* file that already employs a data-driven loop, you **MUST NOT** append new standalone `test()` blocks or create a second loop at the bottom of the file. You must analyze the existing data structure (e.g., `const testCases = [...]`) and inject your new test case into that array. This prevents redundant setup/teardown execution and often provides "free" coverage by running your new input against multiple existing configurations (like different environments or states) established by the existing matrix.
 
 **Example of Parameterization:**
 ```javascript
@@ -236,6 +241,7 @@ Before writing a custom conditional, you MUST use the following built-in helpers
 *   **Array Inclusion:** Use `assert_in_array(actual, expected_array, message)` instead of `assert_true(array.includes(val))`.
 *   **Type Checking:** Use `assert_class_string(object, class_name, message)` (e.g., checking `[object Array]`) instead of manual `typeof` or `instanceof` checks where appropriate.
 *   **IDL Attributes:** When writing IDL API tests, you MUST use `assert_readonly(object, property_name)` to test `readonly` attributes, and `assert_idl_attribute(object, property_name)` to ensure the attribute exists on the prototype chain.
+*   **Boolean Collapse Anti-Pattern:** Do not evaluate a condition to a boolean and assert against that (e.g., `const isValid = val !== ""; assert_equals(isValid, true);`). This destroys diagnostic output on failure. You MUST assert the raw values directly (e.g., `assert_not_equals(val, "");` for valid cases and `assert_equals(val, "");` for invalid cases).
 
 If your use case is not listed here, you MUST read or `grep` through the `resources/testharness.js` file for built-in `assert_*` methods that simplify your boilerplate before falling back to `assert_true`.
 

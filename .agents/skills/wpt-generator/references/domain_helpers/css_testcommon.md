@@ -31,9 +31,19 @@ Use these to test whether a browser correctly parses (or rejects) a specified CS
 
 **Example:**
 ```javascript
-test_valid_value('align-items', 'center');
-test_valid_value('align-items', 'flex-start', 'start'); // If it serializes differently
-test_invalid_value('align-items', '10px');
+// CRITICAL: Always use data-driven arrays/loops for multiple values!
+const valid_values = [
+  { specified: 'center' },
+  { specified: 'flex-start', expected: 'start' }
+];
+for (const { specified, expected } of valid_values) {
+  test_valid_value('align-items', specified, expected);
+}
+
+const invalid_values = ['10px', 'auto', 'none'];
+for (const value of invalid_values) {
+  test_invalid_value('align-items', value);
+}
 ```
 
 ## Computed Style (`computed-testcommon.js`)
@@ -42,9 +52,15 @@ Use these to test how a specified CSS value resolves in `getComputedStyle`.
 
 **Example:**
 ```javascript
-test_computed_value('width', 'auto');
-test_computed_value('width', '100px');
-test_computed_value('margin-top', '10%', '50px'); // Assuming parent width is 500px
+// CRITICAL: Always use data-driven arrays/loops for multiple values!
+const computed_values = [
+  { specified: 'auto' },
+  { specified: '100px' },
+  { specified: '10%', expected: '50px' } // Assuming parent width is 500px
+];
+for (const { specified, expected } of computed_values) {
+  test_computed_value('width', specified, expected); // Example assumes same property
+}
 ```
 
 ## Inheritance (`inheritance-testcommon.js`)
@@ -74,4 +90,44 @@ test_shorthand_value('margin', '10px 20px', {
   'margin-bottom': '10px',
   'margin-left': '20px'
 });
+```
+
+## At-Rules & Descriptors (e.g., `@font-face`)
+
+To test parsing of at-rules and their descriptors, you **MUST** use `test_valid_rule(rule, serialized)` from `parsing-testcommon.js`.
+
+Because invalid descriptors inside a valid at-rule do *not* cause `insertRule()` to throw a `DOMException` (the CSS parser simply drops the invalid descriptor), you **cannot** use `test_invalid_rule()` to test invalid descriptors. Instead, you must use `test_valid_rule()` for BOTH valid and invalid descriptors by leveraging the `serialized` parameter:
+
+*   **For valid descriptors:** `test_valid_rule('@font-face { descriptor: value; }');` (asserts that the rule parses and serializes identically).
+*   **For invalid descriptors:** `test_valid_rule('@font-face { descriptor: invalid-value; }', '@font-face { }');` (asserts that the rule parses but the invalid descriptor is dropped during serialization).
+
+**CRITICAL MANDATE - Data-Driven Testing:** You **MUST NOT** copy-paste flat, repetitive `test_valid_rule()` calls for every permutation. You **MUST** use data-driven loops (arrays of test cases), just as you would for `test()` or `promise_test()` blocks. Do not blindly copy legacy code from adjacent files that violates this.
+
+**CRITICAL MANDATE - Canonical Serialization:** When testing descriptors or properties that accept multiple values where the second value might default to the first (e.g., `normal normal` serializing to `normal`), or when testing `calc()` values, you **MUST** use an array of objects containing `specified` and `expected` properties to handle canonical serializations accurately. Combine all valid values into a single array to reduce boilerplate. Do not use flat arrays of strings unless you are absolutely certain all values serialize exactly as specified.
+
+**Example (Data-Driven - Required):**
+```javascript
+const valid_values = [
+  { specified: 'normal' },
+  { specified: '50% 150%' },
+  { specified: 'normal normal', expected: 'normal' }, // Canonical serialization
+  { specified: 'calc(50% + 50%)', expected: 'calc(100%)' }
+];
+for (const { specified, expected } of valid_values) {
+  test_valid_rule(
+    `@font-face { line-gap-override: ${specified}; }`,
+    `@font-face { line-gap-override: ${expected || specified}; }`
+  );
+}
+
+const invalid_values = [
+  '100',
+  '10% 20% 30%'
+];
+for (const value of invalid_values) {
+  test_valid_rule(
+    `@font-face { line-gap-override: ${value}; }`,
+    '@font-face { }' // Invalid descriptors are dropped
+  );
+}
 ```
