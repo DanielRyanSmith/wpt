@@ -191,12 +191,10 @@ async_test(t => {
 *   **Concurrency:** `testharness.js` doesn't impose scheduling on async tests; they run whenever step functions are invoked. Multiple tests in the same global can run concurrently. Take care not to let them interfere with each other.
 *   **Unreached Code:** For asynchronous callbacks that should never execute, use `t.unreached_func("Reason")`.
 
-### 4.5 Data-Driven Testing (Parameterization) - **CRITICAL MANDATE**
-When testing multiple permutations of an API (e.g., testing different method signatures like an object vs. an initializer dictionary, testing combinations of options, or iterating over a list of valid/invalid inputs), you **MUST NOT** copy-paste identical `test()` or `promise_test()` blocks. 
+### 4.5 Data-Driven Testing (Parameterization)
+When testing multiple permutations of an API (e.g., testing different method signatures like an object vs. an initializer dictionary, testing combinations of options, or iterating over a list of valid/invalid inputs), it is recommended to use a **data-driven approach**. 
 
-*Note: This data-driven mandate applies even when using built-in or domain-specific wrapper functions that internally call `test()` (e.g., `test_valid_rule()`, `test_valid_value()`, `idl_test()`). Do not write out a flat list of 20 wrapper calls; loop over an array of valid/invalid inputs instead.*
-
-Instead, you **MUST** use a **data-driven approach**. Define an array of test cases (`const testCases = [...]`) and iterate over them using a loop (e.g., `for (const { ... } of testCases)`) to dynamically generate the `test()` or `promise_test()` blocks. This removes redundant JavaScript boilerplate, ensures consistent coverage across all permutations (e.g., testing both `AbortError` and a custom error for every scenario), and makes the test ecosystem scalable and maintainable.
+Define an array of test cases (`const testCases = [...]`) and iterate over them using a loop (e.g., `for (const { ... } of testCases)`) to dynamically generate the `test()` or `promise_test()` blocks. This removes redundant JavaScript boilerplate, ensures consistent coverage across all permutations (e.g., testing both `AbortError` and a custom error for every scenario), and makes the test ecosystem scalable and maintainable. However, do not over-engineer loops for simple, one-off behaviors that don't share setup logic.
 
 #### 4.5.1 Modifying Existing Files (Matrix Expansion)
 When adding a new test case to an *existing* file that already employs a data-driven loop, you **MUST NOT** append new standalone `test()` blocks or create a second loop at the bottom of the file. You must analyze the existing data structure (e.g., `const testCases = [...]`) and inject your new test case into that array. This prevents redundant setup/teardown execution and often provides "free" coverage by running your new input against multiple existing configurations (like different environments or states) established by the existing matrix.
