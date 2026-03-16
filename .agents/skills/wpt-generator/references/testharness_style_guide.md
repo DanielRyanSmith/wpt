@@ -21,7 +21,7 @@ These formats **automatically generate** the necessary HTML boilerplate.
 
 *   **`.window.js`**: Runs in a standard Window environment.
 *   **`.worker.js`**: Runs in a Dedicated Worker.
-*   **`.any.js`**: Runs in multiple global scopes (default: Window and Dedicated Worker). You can customize this using metadata.
+*   **`.any.js`**: Runs the same test code in multiple execution scopes. By default, it runs in `window` and `dedicatedworker` contexts. You can extensively customize this using the `// META: global=` header. For example: `// META: global=window,worker,serviceworker,sharedworker,shadowrealm-in-window`. A massive advantage of using `.any.js` (the multi-global pattern) over `.worker.js` is that the harness automatically handles `done()` calls across all worker scopes, eliminating boilerplate.
 *   **`.extension.js`**: Runs as a Web Extension using the `browser.test` API.
 
 **IMPORTANT BOILERPLATE RULES FOR JS-ONLY TESTS:**
@@ -77,6 +77,38 @@ If the test logic is straightforward and a wrapper isn't needed, you can use `si
 </body>
 ```
 
+### 2.3 Manual Tests (`-manual.html`) (ABSOLUTE LAST RESORT)
+**CRITICAL MANDATE:** You **MUST NOT** write a manual test unless it is fundamentally impossible to test the behavior using current automated tooling. This format is strictly reserved as an absolute last resort for behaviors that require unavoidable physical human interaction or OS-level interventions (e.g., forcefully crashing a browser process via the OS, unplugging physical hardware, or interacting with native OS UI menus). If the behavior can be automated via standard JavaScript or `testdriver.js`, you MUST automate it.
+
+**IMPORTANT BOILERPLATE RULES FOR MANUAL TESTS:**
+*   The filename **MUST** end in `-manual` before the extension (e.g., `my-test-manual.html` or `my-test-manual.https.html`).
+*   You **MUST** disable the default 10-second test runner timeout by calling `setup({ explicit_timeout: true });` at the very beginning of your script. Otherwise, the test will time out and fail before the user can complete the manual interaction.
+*   You **MUST** provide clear, concise `<p>` or `<ol>` instructions in the HTML `<body>` telling the user exactly what to do to trigger the test condition.
+*   **CRITICAL RULE - Consolidate Manual Tests:** Because manual tests require human intervention, tester fatigue is a massive concern. You MUST aggressively consolidate manual test logic using data-driven loops (arrays of test cases) whenever possible. Do not generate multiple manual test files that require identical user interventions (e.g., repeatedly clicking a button or crashing a process) across different files, even if the blueprint implies an isolated feature. Prioritize testing multiple permutations in a single execution. Crucially, when appending new cases to an existing data-driven manual test, you MUST group overlapping setups/interventions. Refactor the loop to evaluate multiple `promise_test` assertions against a single shared execution (e.g., sharing a single awaited crash report across multiple tests) rather than adding a new array entry that forces an identical, redundant user intervention.
+
+**Example (`example-manual.html`):**
+```html
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Manual Example Test</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<body>
+  <h1>Manual Test: Feature XYZ</h1>
+  <p><b>Instructions:</b> Please disable your network connection.</p>
+  <script>
+    // 1. Disable the test runner timeout
+    setup({ explicit_timeout: true });
+
+    promise_test(async t => {
+      // 2. Await the out-of-band manual user action
+      await waitForNetworkDisconnect();
+      assert_true(true);
+    }, "Network disconnected successfully");
+  </script>
+</body>
+```
+
 ---
 
 ## 3. Metadata and File Naming
@@ -87,6 +119,7 @@ Metadata and file names communicate critical information to the WPT server and r
 *   `.https`: Loads the test over HTTPS.
 *   `.h2`: Loads the test over HTTP/2.
 *   `.sub`: Enables server-side substitution (e.g., using `{{host}}`).
+*   `-manual`: Indicates the test requires manual user interaction and should not be run in an automated runner without specific configuration. Must appear right before the extension.
 *   `.tentative`: Indicates the test is for a feature still under discussion or not yet standardized.
 
 ### 3.2 `// META` Comments (for `.js` files)
@@ -172,6 +205,7 @@ for (const { desc, getArgs } of testCases) {
 *   `assert_equals(actual, expected, message)`: Check for equality.
 *   `assert_true(actual, message)` / `assert_false(actual, message)`: Check boolean values.
 *   `assert_unreached(message)`: Fail if this point is reached.
+*   **Specialized Assertions**: `testharness.js` provides specialized assertion helpers that must be used over writing manual Javascript logic or conditionals. When writing IDL API tests, you MUST use `assert_readonly(object, property_name)` to test `readonly` attributes, and you MUST use `assert_idl_attribute(object, property_name)` to ensure the attribute exists on the prototype chain. Before writing complex logical checks, you MUST read or `grep` through the `resources/testharness.js` file for built-in `assert_*` methods that simplify the boilerplate.
 
 ### 5.2 Testing for Exceptions
 *   **Synchronous**: `assert_throws_js(ErrorType, () => { ... })` or `assert_throws_dom("IndexSizeError", () => { ... })`.
@@ -202,6 +236,28 @@ fetchLater(url, { method: 'POST' });
 await expectBeacon(uuid, { count: 1 });
 ```
 
+### 5.4 Modern JavaScript for Assertions
+When validating conditions against arrays or collections (e.g., checking if an array of reports contains a specific type), you **MUST NOT** use verbose, manual `for...of` loops with internal boolean flags or redundant `assert_equals` checks inside the loop. 
+Instead, you **MUST** leverage modern, concise JavaScript array methods (e.g., `Array.prototype.some()`, `Array.prototype.every()`, `Array.prototype.find()`) combined with a single assertion.
+
+**Example (BAD - Verbose and Redundant):**
+```javascript
+let found = false;
+for (const report of reports) {
+  if (report.type === 'crash') {
+    found = true;
+    assert_equals(report.type, 'crash'); // Redundant
+    break;
+  }
+}
+assert_true(found, "Crash report was delivered.");
+```
+
+**Example (GOOD - Concise):**
+```javascript
+assert_true(reports.some(r => r.type === 'crash'), "Crash report was delivered.");
+```
+
 ---
 
 ## 6. Core Best Practices
@@ -224,9 +280,17 @@ Avoid writing redundant static HTML scaffolding (e.g., `<div id="container"></di
 *   **Inline Data:** Map arrays or test scenarios inline to avoid polluting the global scope with intermediate variables.
 *   **Exception:** Only use static HTML structures if the exact feature being tested requires a strict DOM configuration to be parsed natively by the browser prior to script execution.
 
-### 6.3 Avoid Timers
+### 6.3 Avoid Timers & Wait for Events
 **DO NOT** use `setTimeout` with a hardcoded delay to "wait" for something.
-*   **Wait for an event**: Use `EventWatcher` or a Promise.
+
+**EventWatcher:** The best and least bug-prone way to wait for a sequence of events is the built-in `EventWatcher` class. It simplifies listening for single or multiple events and handles cleanup automatically.
+```javascript
+promise_test(async t => {
+  const watcher = new EventWatcher(t, document, ['DOMContentLoaded', 'load']);
+  await watcher.wait_for(['DOMContentLoaded', 'load']); // Waits for both in sequence
+  assert_true(true);
+}, "EventWatcher example");
+```
 *   **Check a condition**: Use `t.step_wait(() => condition)`.
 *   **Necessary delays**: Use `t.step_timeout(callback, delay)`.
 
@@ -267,34 +331,32 @@ When generating or appending to tests—especially for CSS parsing or API valida
 *   **Do not create a new monolithic file** with redundant boilerplate if you can logically split your test assertions and append them to these existing category files.
 *   **Split your logic:** If a single requirement dictates both valid and invalid behaviors, put the `test_valid_value` (or equivalent) assertions in the valid file, and the `test_invalid_value` assertions in the invalid file.
 
+### 6.8 Interacting Features & Support Libraries
+Web platform features do not exist in isolation. Many directories contain canonical support libraries intended to decouple tests from the specifics of another feature. Before writing manual integration logic from scratch, check for these standard libraries:
+*   **Cookies:** `cookies/resources/` (scripts to control cookies set on a request)
+*   **Permissions Policy:** `permissions-policy.js`
+*   **Reporting API:** `reporting/resources/` (common report collector service)
+
 ---
 
-## 7. Automation with `testdriver.js`
+## 7. Automation & Manual Tests
 
-For actions that cannot be performed via standard APIs (e.g., mouse clicks, key presses, permissions), use `test_driver`.
+If your test requires user interaction (clicks, key presses, permission dialogs) or complex browser state manipulation (window resizing, cookies), you **MUST NOT** use manual tests simply because it's difficult. Instead, you must automate the interaction using `test_driver`.
 
-**Setup (HTML):**
-```html
-<script src="/resources/testdriver.js"></script>
-<script src="/resources/testdriver-vendor.js"></script>
-```
-
-**Example:**
-```javascript
-promise_test(async t => {
-  const button = document.getElementById("myButton");
-  await test_driver.click(button);
-  // Verify click result
-}, "User click automation");
-```
+*   **For comprehensive instructions on setting up and configuring `testdriver.js`, you MUST refer to the [automation_guide.md](automation_guide.md).**
+*   If (and only if) the test strictly requires a human operator (e.g., unplugging a monitor), see **[manual_test_style_guide.md](manual_test_style_guide.md)**.
 
 ---
 
 ## 8. IDL Testing with `idlharness.js`
 
-For testing Web IDL interfaces, use `idlharness.js`. This ensures that your implementation matches the specification's IDL (attributes, methods, types, etc.).
+For testing Web IDL interfaces (e.g., interface exposure, presence of attributes, existence of methods), you **MUST NOT** use manual boolean assertions (like `assert_true('MyInterface' in window)`). 
 
-**Example (`idlharness.window.js`):**
+Instead, you **MUST** use `idlharness.js`. This ensures that your implementation precisely matches the specification's IDL (attributes, methods, types, inheritance, etc.). Before writing an API exposure test, check the repository's `interfaces/` directory for a corresponding `.idl` file (e.g., `interfaces/my-spec.idl`).
+
+**For comprehensive instructions on setting up and configuring `idlharness.js`, you MUST refer to the [idlharness_guide.md](idlharness_guide.md).**
+
+**Brief Example (`idlharness.window.js`):**
 ```javascript
 // META: script=/resources/WebIDLParser.js
 // META: script=/resources/idlharness.js
@@ -314,23 +376,9 @@ idl_test(
 
 ## 9. Advanced Server Features
 
-WPT's server (`wptserve`) provides powerful features for tests that need more than static files.
+WPT's server (`wptserve`) provides powerful features for tests that need more than static files (e.g., cross-origin requests, custom HTTP headers, specific status codes, or dynamic server logic via Python handlers).
 
-### 9.1 Server-Side Substitution (`.sub`)
-Use `.sub` in the filename to use `{{ }}` placeholders.
-*   `{{host}}`: The main host.
-*   `{{hosts[alt][www]}}`: Cross-origin host.
-*   `{{ports[http][0]}}`: The first HTTP port.
-
-### 9.2 Custom Headers (`.headers`)
-Create a file with the same name as your test but ending in `.headers` to specify custom HTTP headers.
-```text
-Content-Type: text/html; charset=big5
-Cache-Control: no-cache
-```
-
-### 9.3 Static Responses (`.asis`)
-Use `.asis` files for byte-for-byte literal HTTP responses (including status line and headers). This is useful for testing invalid or edge-case HTTP responses.
+**For comprehensive instructions on setting up and configuring advanced server features, including `?pipe=` commands, `.sub` templates, and `.py` handlers, you MUST refer to the [server_features_guide.md](server_features_guide.md).**
 
 ---
 
@@ -356,6 +404,39 @@ Use `fetch_tests_from_worker(worker)` to fetch test results from a worker. This 
 *   The client document controls the test timeout.
 *   Dedicated and shared workers behave as if the `explicit_done` setup option is true, meaning `done()` must be called in the worker script to indicate completion (except for Service Workers which rely on the `install` event).
 
+### 10.3 Message Channels (`channels.sub.js`)
+
+When you need to communicate between globals that do not have a client-side mechanism to establish a channel (e.g., globals in different browsing context groups like in `rel="noopener"` or COOP/COEP tests), you **MUST** use the WPT Message Channels API instead of `postMessage`.
+
+**Setup:** Include the script in both the test document and the remote document:
+```html
+<script src="/resources/channels.sub.js"></script>
+```
+
+**Usage Example:**
+*Main Document:*
+```javascript
+promise_test(async t => {
+  let remote = new RemoteGlobal();
+  window.open(`child.html?uuid=${remote.uuid}`, "_blank", "noopener");
+  let result = await remote.call(id => {
+    return document.getElementById(id).textContent;
+  }, "test-element-id");
+  assert_equals(result, "PASS");
+});
+```
+
+*Child Document (`child.html`):*
+```html
+<!doctype html>
+<script src="/resources/channels.sub.js"></script>
+<p id="test-element-id">PASS</p>
+<script>
+  // Initializes the channel using the uuid from the query parameter
+  start_global_channel();
+</script>
+```
+
 ---
 
 ## 11. Harness Configuration (`setup()`)
@@ -364,6 +445,7 @@ The `setup(options)` or `promise_setup(func)` functions configure the global tes
 
 **Common Options:**
 *   `explicit_done`: Wait for a manual call to `done()` before declaring all tests complete.
+*   `explicit_timeout`: Disable the test runner timeout (essential for `-manual` tests).
 *   `single_test`: Enables Single Page Test mode.
 *   `allow_uncaught_exception`: Disables treating uncaught exceptions as errors (useful when testing `window.onerror`).
 *   `hide_test_state`: Hides the test state UI during execution to prevent interference with visual tests.

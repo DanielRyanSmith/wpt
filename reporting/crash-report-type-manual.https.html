@@ -1,0 +1,59 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Crash reports routing and type</title>
+<link rel="help" href="https://wicg.github.io/crash-reporting/">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="/common/utils.js"></script>
+<script src="resources/report-helper.js"></script>
+
+<h1>Manual Test: Crash Reports Routing and Type</h1>
+<p><b>Instructions:</b></p>
+<ol>
+  <li>Wait for the iframes below to load.</li>
+  <li>Use your browser's task manager or developer tools to forcefully crash <b>all</b> of the iframes' processes.
+      (In Chromium, you can right-click each iframe, select "Inspect", then kill the associated "Subframe" process in the Chrome Task Manager, or navigate the iframe to <code>chrome://crash</code>).</li>
+  <li>The tests will automatically pass once the crash reports are received by the endpoints.</li>
+</ol>
+<script>
+  // Disable the default test timeout for manual tests
+  setup({ explicit_timeout: true });
+
+  const base_url = `${location.protocol}//${location.host}`;
+  const endpoint = `${base_url}/reporting/resources/report.py`;
+
+  const tests = [
+    {
+      endpoint_name: 'default',
+      description: 'Crash reports must have the report type set to "crash".'
+    },
+    {
+      endpoint_name: 'crash-reporting',
+      description: 'Crash reports must be delivered to the crash-reporting endpoint when specified.'
+    },
+    {
+      endpoint_name: 'default',
+      description: 'If a `crash-reporting` endpoint is not specified but a `default` endpoint is specified, crash reports must be delivered to the `default` endpoint.'
+    }
+  ];
+
+  for (const {endpoint_name, description} of tests) {
+    const id = token();
+    const iframe = document.createElement('iframe');
+    iframe.src = `resources/crash-iframe.py?id=${id}&endpoint_name=${endpoint_name}`;
+    document.body.appendChild(iframe);
+
+    promise_test(async t => {
+      while (true) {
+        const reports = await pollReports(endpoint, id);
+        for (const report of reports) {
+          if (report.type === 'crash') {
+            assert_equals(report.type, 'crash', 'A report with type "crash" was received.');
+            return;
+          }
+        }
+        await new Promise(r => t.step_timeout(r, 1000));
+      }
+    }, description);
+  }
+</script>

@@ -14,6 +14,7 @@ Flags are added to the filename to enable specific server features. These apply 
 *   `.h2`: Loads the test over HTTP/2.
 *   `.sub`: Enables [server-side substitution](https://web-platform-tests.org/writing-tests/server-pipes.html#sub), allowing placeholders like `{{host}}`.
 *   `.tentative`: Indicates the test is for a feature not yet fully standardized.
+*   `-manual`: Indicates the test requires a human operator and cannot be automated. (See [manual_test_style_guide.md](manual_test_style_guide.md)).
 
 ### 1.2 How to Choose WPT Test File Suffixes
 
@@ -136,37 +137,11 @@ Tests must be independent and not interfere with each other.
 
 ---
 
-## 4. Automation with `testdriver.js`
-
-For tests requiring user interaction (clicks, key presses, etc.) that cannot be triggered via standard APIs, use `testdriver.js`. This is supported by JS tests, reftests, and crashtests.
-
-### 4.1 Setup
-Include the following scripts in your HTML:
-```html
-<script src="/resources/testdriver.js"></script>
-<script src="/resources/testdriver-vendor.js"></script>
-```
-
-### 4.2 Usage Example
-```html
-<script>
-  async function performAction() {
-    const button = document.getElementById("target");
-    await test_driver.click(button);
-    // Continue with test logic or remove wait classes
-  }
-  performAction();
-</script>
-```
-*Note: While the automation API is universal, each test type has its own specific mechanism for managing asynchrony and signaling test completion.*
-
----
-
-## 5. Style and Linting
+## 4. Style and Linting
 
 Consistent style is enforced across the entire WPT repository.
 
-### 5.1 Formatting Rules
+### 4.1 Formatting Rules
 *   **Indentation**: Use spaces, not tabs.
 *   **Whitespace**: No trailing whitespace.
 *   **Line Endings**: Use UNIX-style (LF) line endings.

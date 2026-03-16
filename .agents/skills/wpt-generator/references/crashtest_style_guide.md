@@ -101,20 +101,7 @@ Execution of tests on a page is subject to a global timeout (defaulting to 10s).
 ```
 
 ### User Interactions (`testdriver.js`)
-If a crash is triggered by user interaction, use `testdriver.js`.
-
-```html
-<html class="test-wait">
-<script src="/resources/testdriver.js"></script>
-<script src="/resources/testdriver-vendor.js"></script>
-<button id="btn">Click me</button>
-<script>
-  const btn = document.getElementById("btn");
-  btn.onclick = () => document.documentElement.classList.remove("test-wait");
-  test_driver.click(btn);
-</script>
-</html>
-```
+If a crash is triggered by user interaction, you MUST automate the interaction using `testdriver.js`. See [automation_guide.md](automation_guide.md) for full instructions on setup and usage.
 
 ### File Name Flags
 You can use standard WPT filename flags with crashtests:
