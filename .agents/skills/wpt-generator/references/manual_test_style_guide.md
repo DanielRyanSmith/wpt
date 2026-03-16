@@ -14,11 +14,16 @@ Manual tests **must** have filenames ending in `-manual` immediately before the 
 * **Correct:** `drag-drop-desktop-manual.https.html`
 * **Incorrect:** `manual-print-dialog.html` (The suffix must be `-manual`)
 
-## 2. Self-Describing UI
+## 2. Self-Describing UI and Tester UX (CRITICAL)
 
 Manual tests must be fully self-describing. You cannot rely on an automated runner to determine the outcome.
 * Provide clear, step-by-step instructions on the page for the human tester.
 * Provide a clear statement of exactly how the human tester should determine the outcome (PASS/FAIL).
+
+**Tester UX and OS Visibility:**
+When a manual test requires the human tester to identify a specific window, popup, or iframe outside of the browser's main document (e.g., using an OS task manager to forcefully crash a process, or interacting with OS-level UI), you **MUST** ensure the target is easily identifiable. 
+*   **Window Titles:** Any spawned popup windows or top-level frames MUST have a clearly defined `<title>` tag (e.g., `<title>Crash me!</title>`). If the window has no title, task managers often display a convoluted URL or query string, drastically increasing tester fatigue.
+*   **Distinctive Characteristics:** If spawning multiple targets, give them visually distinct characteristics or explicit titles so the human operator knows exactly which one to interact with.
 
 ## 3. Using `testharness.js` for Manual Tests
 

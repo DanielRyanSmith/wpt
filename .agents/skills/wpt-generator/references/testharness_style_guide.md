@@ -148,14 +148,36 @@ Use for asynchronous logic. Returning a promise allows the harness to manage the
 promise_test(async t => {
   const response = await fetch("data.json");
   assert_true(response.ok);
-}, "Fetch data test");
+});
+```
+
+### 4.3 Assertion Minimalism and Strictness (CRITICAL)
+WPT's `assert_true(actual)` and `assert_false(actual)` perform **strict equality checks** (`actual === true` and `actual === false`). 
+
+Because of this strictness, you **MUST NOT** write redundant `typeof` or existence assertions if you are immediately going to assert the boolean value itself.
+
+**Incorrect (Redundant):**
+```javascript
+const myObj = { is_active: false };
+assert_true(!!myObj, "Object exists"); // Redundant if checking properties
+assert_own_property(myObj, 'is_active');
+assert_equals(typeof myObj.is_active, 'boolean'); // Redundant! assert_false already enforces this.
+assert_false(myObj.is_active);
+```
+
+**Correct (Minimal & Strict):**
+```javascript
+const myObj = { is_active: false };
+assert_own_property(myObj, 'is_active');
+// Implicitly verifies both the type (boolean) AND the value (false) in one strict check.
+assert_false(myObj.is_active);
 ```
 
 **Important Rules for Promise Tests:**
 *   **Sequential Execution:** Unlike asynchronous tests, `testharness.js` queues promise tests so the next test won't start until the previous one finishes.
 *   **Do Not Mix with Async Steps:** Avoid mixing `promise_test` logic with callback functions like `t.step_func()`. This produces confusing tests and can cause the next test to begin before the promise settles. Wrap asynchronous behaviors into the promise chain instead.
 
-### 4.3 Asynchronous Tests (`async_test`)
+### 4.4 Asynchronous Tests (`async_test`)
 Use for callback-based APIs. You must manually manage `step`, `done`, and `step_func`.
 ```javascript
 async_test(t => {
@@ -169,7 +191,7 @@ async_test(t => {
 *   **Concurrency:** `testharness.js` doesn't impose scheduling on async tests; they run whenever step functions are invoked. Multiple tests in the same global can run concurrently. Take care not to let them interfere with each other.
 *   **Unreached Code:** For asynchronous callbacks that should never execute, use `t.unreached_func("Reason")`.
 
-### 4.4 Data-Driven Testing (Parameterization) - **CRITICAL MANDATE**
+### 4.5 Data-Driven Testing (Parameterization) - **CRITICAL MANDATE**
 When testing multiple permutations of an API (e.g., testing different method signatures like an object vs. an initializer dictionary, testing combinations of options, or iterating over a list of valid/invalid inputs), you **MUST NOT** copy-paste identical `test()` or `promise_test()` blocks. 
 
 Instead, you **MUST** use a **data-driven approach**. Define an array of test cases (`const testCases = [...]`) and iterate over them using a loop (e.g., `for (const { ... } of testCases)`) to dynamically generate the `test()` or `promise_test()` blocks. This removes redundant JavaScript boilerplate, ensures consistent coverage across all permutations (e.g., testing both `AbortError` and a custom error for every scenario), and makes the test ecosystem scalable and maintainable.
@@ -205,7 +227,17 @@ for (const { desc, getArgs } of testCases) {
 *   `assert_equals(actual, expected, message)`: Check for equality.
 *   `assert_true(actual, message)` / `assert_false(actual, message)`: Check boolean values.
 *   `assert_unreached(message)`: Fail if this point is reached.
-*   **Specialized Assertions**: `testharness.js` provides specialized assertion helpers that must be used over writing manual Javascript logic or conditionals. When writing IDL API tests, you MUST use `assert_readonly(object, property_name)` to test `readonly` attributes, and you MUST use `assert_idl_attribute(object, property_name)` to ensure the attribute exists on the prototype chain. Before writing complex logical checks, you MUST read or `grep` through the `resources/testharness.js` file for built-in `assert_*` methods that simplify the boilerplate.
+
+#### 5.1.1 Advanced Assertions (CRITICAL MANDATE)
+You **MUST** use precise, specialized assertions rather than writing manual JavaScript logic or conditionals evaluated by a generic `assert_true` or `assert_false`. Precise assertions provide significantly better failure messages in the test runner, pinpointing the exact missing key or mismatched value rather than a generic "expected true got false".
+
+Before writing a custom conditional, you MUST use the following built-in helpers if applicable:
+*   **Property Existence:** Use `assert_own_property(object, property_name, message)` or `assert_inherits(object, property_name, message)` instead of `assert_true('prop' in obj)`.
+*   **Array Inclusion:** Use `assert_in_array(actual, expected_array, message)` instead of `assert_true(array.includes(val))`.
+*   **Type Checking:** Use `assert_class_string(object, class_name, message)` (e.g., checking `[object Array]`) instead of manual `typeof` or `instanceof` checks where appropriate.
+*   **IDL Attributes:** When writing IDL API tests, you MUST use `assert_readonly(object, property_name)` to test `readonly` attributes, and `assert_idl_attribute(object, property_name)` to ensure the attribute exists on the prototype chain.
+
+If your use case is not listed here, you MUST read or `grep` through the `resources/testharness.js` file for built-in `assert_*` methods that simplify your boilerplate before falling back to `assert_true`.
 
 ### 5.2 Testing for Exceptions
 *   **Synchronous**: `assert_throws_js(ErrorType, () => { ... })` or `assert_throws_dom("IndexSizeError", () => { ... })`.
@@ -237,25 +269,31 @@ await expectBeacon(uuid, { count: 1 });
 ```
 
 ### 5.4 Modern JavaScript for Assertions
-When validating conditions against arrays or collections (e.g., checking if an array of reports contains a specific type), you **MUST NOT** use verbose, manual `for...of` loops with internal boolean flags or redundant `assert_equals` checks inside the loop. 
-Instead, you **MUST** leverage modern, concise JavaScript array methods (e.g., `Array.prototype.some()`, `Array.prototype.every()`, `Array.prototype.find()`) combined with a single assertion.
+When validating conditions against arrays, collections, or object properties, you **MUST NOT** blindly copy verbose boilerplate from older "Golden Examples". Specifically:
+1. **Array Iteration:** Do not use manual `for...of` loops with internal boolean flags or redundant `assert_equals` checks. Use modern, concise JavaScript array methods (`Array.prototype.some()`, `Array.prototype.every()`, `Array.prototype.find()`, `Array.prototype.forEach()`) combined with a single assertion.
+2. **Property Checking:** Do not use verbose inequality checks like `if (obj.property !== undefined)` to test for property existence or to handle optional/omitted fields. You MUST use the idiomatic `in` operator (`if ('property' in obj)`).
+3. **Redundant Assertions:** Do not add filler assertions (like `assert_true(array.length > 0)`) simply to register a `testharness.js` assertion if the surrounding test flow (e.g., a promise resolving only when an array is populated) already guarantees that condition.
 
-**Example (BAD - Verbose and Redundant):**
+**Example (BAD - Verbose, Redundant, Legacy Style):**
 ```javascript
 let found = false;
 for (const report of reports) {
-  if (report.type === 'crash') {
+  if (report.body && report.body.reason !== undefined) {
     found = true;
-    assert_equals(report.type, 'crash'); // Redundant
-    break;
+    assert_true(['oom', 'unresponsive'].includes(report.body.reason));
   }
 }
 assert_true(found, "Crash report was delivered.");
 ```
 
-**Example (GOOD - Concise):**
+**Example (GOOD - Concise, Modern):**
 ```javascript
-assert_true(reports.some(r => r.type === 'crash'), "Crash report was delivered.");
+reports.filter(r => r.type === 'crash').forEach(r => {
+  if ('reason' in r.body) {
+    assert_in_array(r.body.reason, ['oom', 'unresponsive']);
+  }
+});
+// (Assuming the caller already awaited the existence of a crash report)
 ```
 
 ---
