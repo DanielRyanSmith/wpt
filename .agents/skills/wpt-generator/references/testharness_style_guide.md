@@ -77,38 +77,6 @@ If the test logic is straightforward and a wrapper isn't needed, you can use `si
 </body>
 ```
 
-### 2.3 Manual Tests (`-manual.html`) (ABSOLUTE LAST RESORT)
-**CRITICAL MANDATE:** You **MUST NOT** write a manual test unless it is fundamentally impossible to test the behavior using current automated tooling. This format is strictly reserved as an absolute last resort for behaviors that require unavoidable physical human interaction or OS-level interventions (e.g., forcefully crashing a browser process via the OS, unplugging physical hardware, or interacting with native OS UI menus). If the behavior can be automated via standard JavaScript or `testdriver.js`, you MUST automate it.
-
-**IMPORTANT BOILERPLATE RULES FOR MANUAL TESTS:**
-*   The filename **MUST** end in `-manual` before the extension (e.g., `my-test-manual.html` or `my-test-manual.https.html`).
-*   You **MUST** disable the default 10-second test runner timeout by calling `setup({ explicit_timeout: true });` at the very beginning of your script. Otherwise, the test will time out and fail before the user can complete the manual interaction.
-*   You **MUST** provide clear, concise `<p>` or `<ol>` instructions in the HTML `<body>` telling the user exactly what to do to trigger the test condition.
-*   **CRITICAL RULE - Consolidate Manual Tests:** Because manual tests require human intervention, tester fatigue is a massive concern. You MUST aggressively consolidate manual test logic using data-driven loops (arrays of test cases) whenever possible. Do not generate multiple manual test files that require identical user interventions (e.g., repeatedly clicking a button or crashing a process) across different files, even if the blueprint implies an isolated feature. Prioritize testing multiple permutations in a single execution. Crucially, when appending new cases to an existing data-driven manual test, you MUST group overlapping setups/interventions. Refactor the loop to evaluate multiple `promise_test` assertions against a single shared execution (e.g., sharing a single awaited crash report across multiple tests) rather than adding a new array entry that forces an identical, redundant user intervention.
-
-**Example (`example-manual.html`):**
-```html
-<!DOCTYPE html>
-<meta charset="utf-8">
-<title>Manual Example Test</title>
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<body>
-  <h1>Manual Test: Feature XYZ</h1>
-  <p><b>Instructions:</b> Please disable your network connection.</p>
-  <script>
-    // 1. Disable the test runner timeout
-    setup({ explicit_timeout: true });
-
-    promise_test(async t => {
-      // 2. Await the out-of-band manual user action
-      await waitForNetworkDisconnect();
-      assert_true(true);
-    }, "Network disconnected successfully");
-  </script>
-</body>
-```
-
 ---
 
 ## 3. Metadata and File Naming
@@ -152,7 +120,7 @@ promise_test(async t => {
 ```
 
 ### 4.3 Assertion Minimalism and Strictness (CRITICAL)
-WPT's `assert_true(actual)` and `assert_false(actual)` perform **strict equality checks** (`actual === true` and `actual === false`). 
+WPT's `assert_true(actual)` and `assert_false(actual)` perform **strict equality checks** (`actual === true` and `actual === false`).
 
 Because of this strictness, you **MUST NOT** write redundant `typeof` or existence assertions if you are immediately going to assert the boolean value itself.
 
@@ -192,7 +160,7 @@ async_test(t => {
 *   **Unreached Code:** For asynchronous callbacks that should never execute, use `t.unreached_func("Reason")`.
 
 ### 4.5 Data-Driven Testing (Parameterization)
-When testing multiple permutations of an API (e.g., testing different method signatures like an object vs. an initializer dictionary, testing combinations of options, or iterating over a list of valid/invalid inputs), it is recommended to use a **data-driven approach**. 
+When testing multiple permutations of an API (e.g., testing different method signatures like an object vs. an initializer dictionary, testing combinations of options, or iterating over a list of valid/invalid inputs), it is recommended to use a **data-driven approach**.
 
 Define an array of test cases (`const testCases = [...]`) and iterate over them using a loop (e.g., `for (const { ... } of testCases)`) to dynamically generate the `test()` or `promise_test()` blocks. This removes redundant JavaScript boilerplate, ensures consistent coverage across all permutations (e.g., testing both `AbortError` and a custom error for every scenario), and makes the test ecosystem scalable and maintainable. However, do not over-engineer loops for simple, one-off behaviors that don't share setup logic.
 
@@ -262,12 +230,12 @@ This guarantees instant test success if the negative condition holds, and instan
 ```javascript
 // BAD: Polling for 0 forces a 3+ second timeout on success.
 controller.abort();
-await expectBeacon(uuid, { count: 0 }); 
+await expectBeacon(uuid, { count: 0 });
 
 // GOOD: Sentinel pattern returns instantly on success.
 controller.abort();
 // 1. Fire a sentinel request that we know will succeed.
-fetchLater(url, { method: 'POST' }); 
+fetchLater(url, { method: 'POST' });
 // 2. We now expect EXACTLY 1 beacon (the sentinel) to arrive.
 await expectBeacon(uuid, { count: 1 });
 ```
@@ -392,7 +360,7 @@ If your test requires user interaction (clicks, key presses, permission dialogs)
 
 ## 8. IDL Testing with `idlharness.js`
 
-For testing Web IDL interfaces (e.g., interface exposure, presence of attributes, existence of methods), you **MUST NOT** use manual boolean assertions (like `assert_true('MyInterface' in window)`). 
+For testing Web IDL interfaces (e.g., interface exposure, presence of attributes, existence of methods), you **MUST NOT** use manual boolean assertions (like `assert_true('MyInterface' in window)`).
 
 Instead, you **MUST** use `idlharness.js`. This ensures that your implementation precisely matches the specification's IDL (attributes, methods, types, inheritance, etc.). Before writing an API exposure test, check the repository's `interfaces/` directory for a corresponding `.idl` file (e.g., `interfaces/my-spec.idl`).
 
