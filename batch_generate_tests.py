@@ -61,9 +61,15 @@ def main():
             subprocess.run(cmd, check=True)
             print(f"\n✓ Test {i} completed successfully.\n")
         except subprocess.CalledProcessError as e:
+            if e.returncode == 130:
+                print("\nBatch generation cancelled by user.")
+                sys.exit(1)
             print(f"\n✗ Error generating test {i}. Gemini CLI exited with code: {e.returncode}\n")
         except FileNotFoundError:
             print("\nError: 'gemini' CLI command not found. Ensure it is installed and in your PATH.")
+            sys.exit(1)
+        except KeyboardInterrupt:
+            print("\nBatch generation cancelled by user.")
             sys.exit(1)
 
     print("Batch generation complete!")
