@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<title>ShadowRoot interface must not support the onfullscreenchange event handler IDL attribute</title>
+<link rel="help" href="https://fullscreen.spec.whatwg.org/">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script>
+test(() => {
+  const div = document.createElement("div");
+  const shadowRoot = div.attachShadow({ mode: "open" });
+  assert_false("onfullscreenchange" in shadowRoot, "onfullscreenchange should not be present on ShadowRoot instances");
+  assert_false("onfullscreenchange" in ShadowRoot.prototype, "onfullscreenchange should not be present on ShadowRoot.prototype");
+}, "The ShadowRoot interface must not support the onfullscreenchange event handler IDL attribute");
+</script>
