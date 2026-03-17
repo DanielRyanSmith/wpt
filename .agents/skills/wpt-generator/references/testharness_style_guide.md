@@ -164,6 +164,8 @@ When testing multiple permutations of an API (e.g., testing different method sig
 
 Define an array of test cases (`const testCases = [...]`) and iterate over them using a loop (e.g., `for (const { ... } of testCases)`) to dynamically generate the `test()` or `promise_test()` blocks. This removes redundant JavaScript boilerplate, ensures consistent coverage across all permutations (e.g., testing both `AbortError` and a custom error for every scenario), and makes the test ecosystem scalable and maintainable. However, do not over-engineer loops for simple, one-off behaviors that don't share setup logic.
 
+*(Note: There is a strictly enforced exception to this rule for CSS parsing tests. See [css_testcommon.md](domain_helpers/css_testcommon.md) for details).*
+
 #### 4.5.1 Modifying Existing Files (Matrix Expansion)
 When adding a new test case to an *existing* file that already employs a data-driven loop, you **MUST NOT** append new standalone `test()` blocks or create a second loop at the bottom of the file. You must analyze the existing data structure (e.g., `const testCases = [...]`) and inject your new test case into that array. This prevents redundant setup/teardown execution and often provides "free" coverage by running your new input against multiple existing configurations (like different environments or states) established by the existing matrix.
 

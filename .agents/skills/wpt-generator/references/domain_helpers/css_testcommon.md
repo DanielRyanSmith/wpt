@@ -1,5 +1,19 @@
 # CSS Property & Parsing Helpers (`css/support/*-testcommon.js`)
 
+## CSS Test Structure Rules (CRITICAL)
+When generating tests within the `css/` directory, you MUST obey the following structural rules. These rules **override** general WPT style guidelines:
+
+1.  **Unrolled Parsing Tests (No Loops):** When writing parsing, computed value, or inheritance tests using the `*-testcommon.js` helpers in a **new file**, you MUST NOT use arrays or loops to iterate over test cases. The preferred style is to repeat the function calls on consecutive lines:
+    ```javascript
+    test_valid_value("will-change", "scroll-position");
+    test_valid_value("will-change", "contents");
+    test_valid_value("will-change", "transform");
+    ```
+    *Caveat:* If you are appending to an *existing* file, you MUST conform to the paradigm of that specific file (i.e., if the existing file uses arrays/loops, you must append to the array; if it uses flat lines, add new flat lines).
+2.  **Single Behavior Per File:** General CSS tests (non-parsing, non-API tests like animations, flexbox layouts, or rendering edge cases) should be kept extremely short and focused on exactly **ONE specific behavior or edge case per file**. Do not consolidate multiple different rendering behaviors or edge cases into a single large test file.
+
+---
+
 When writing WPTs for CSS APIs (such as testing property parsing, computed values, inheritance, or shorthands), **do not manually write out the Javascript to set styles, read `getComputedStyle`, and compare values**. Instead, you **MUST** use the robust canonical testing framework located in the `/css/support/` directory.
 
 ## Including the Frameworks

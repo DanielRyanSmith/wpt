@@ -103,8 +103,12 @@ Every generated test file MUST be explicitly mapped to the target `<web_feature_
 3. **Update if Existing:** If it exists, read it and append your new test file name to the `files:` list under the matching `<web_feature_id>`. (If the test is already covered by an existing wildcard pattern belonging to the correct feature, you don't need to list it individually).
 4. **Prevent Collisions (CRITICAL):** Carefully review the other web feature IDs defined in the same `WEB_FEATURES.yml` file. If another feature uses a wildcard (like `- "**"` or `- "*.html"`) that would accidentally match your newly created test file, you MUST explicitly exclude your test from that feature by adding a negation line (e.g., `- "!<new_test_file_name>"`) to its `files:` list.
 
-### 8. Finalizing
+### 8. Finalizing & Committing
 - Ensure standard WPT scripts are included properly (if applicable) using absolute paths from the root server.
 - Ensure crashtests end with `-crash.html` if creating a new crashtest file.
 - **Clean Up:** You MUST explicitly delete the `.wpt-generator-tmp/` directory if it exists (e.g., `rm -rf .wpt-generator-tmp/`) to ensure no temporary prototypes, scripts, or intermediate files are left behind in the repository.
-- Do not check in or commit files unless explicitly requested.
+- **Incremental Commit (CRITICAL):** Once the test is validated and the `WEB_FEATURES.yml` file is mapped, you MUST commit your work.
+  1. Determine the specific file(s) you created or modified during this task.
+  2. Do NOT use `git add .` or `git commit -a`, as the workspace may contain unrelated modified files.
+  3. Explicitly stage ONLY the files you worked on: `git add <path/to/test_file.html> <path/to/WEB_FEATURES.yml>`
+  4. Create a descriptive commit message that summarizes the feature tested and the type of WPT generated: `git commit -m "[<web_feature_id>] Add WPT for <brief description of test>"`
