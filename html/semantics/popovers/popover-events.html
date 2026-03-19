@@ -146,6 +146,17 @@ window.onload = () => {
 
   promise_test(async t => {
     const {popover,signal} = getPopoverAndSignal(t);
+    popover.addEventListener("beforetoggle",(e) => {
+      popover.removeAttribute("popover");
+    }, {signal});
+    t.add_cleanup(() => {popover.setAttribute("popover", "");});
+    assert_false(popover.matches(":popover-open"));
+    assert_throws_dom("NotSupportedError", () => popover.showPopover());
+    assert_false(popover.matches(":popover-open"), "popover is not shown if its popover attribute is removed during beforetoggle");
+  }, "The popover show algorithm aborts if the popover attribute is removed during the beforetoggle event");
+
+  promise_test(async t => {
+    const {popover,signal} = getPopoverAndSignal(t);
     let events;
     function resetEvents() {
       events = {
