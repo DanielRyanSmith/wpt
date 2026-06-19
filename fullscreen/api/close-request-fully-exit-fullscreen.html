@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Fullscreen takes precedence over close watchers for close requests</title>
+<link rel="help" href="https://fullscreen.spec.whatwg.org/#fully-exit-fullscreen">
+<link rel="help" href="https://html.spec.whatwg.org/multipage/interaction.html#close-requests-and-close-watchers">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="/resources/testdriver.js"></script>
+<script src="/resources/testdriver-actions.js"></script>
+<script src="/resources/testdriver-vendor.js"></script>
+<script src="/close-watcher/resources/helpers.js"></script>
+
+<div id="target" style="width: 10px; height: 10px;"></div>
+
+<script>
+for (const type of ['CloseWatcher', 'dialog', 'popover']) {
+  promise_test(async t => {
+    const target = document.querySelector('#target');
+
+    // 1. Enter fullscreen
+    await test_driver.bless("request fullscreen");
+    await target.requestFullscreen();
+    assert_equals(document.fullscreenElement, target, "Fullscreen should be entered");
+
+    // Ensure we always clean up fullscreen state
+    t.add_cleanup(async () => {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen().catch(() => {});
+      }
+    });
+
+    // 2. Create the close watcher
+    const events = [];
+    createRecordingCloseWatcher(t, events, 'watcher', type);
+
+    let fullscreenExited = false;
+    const onFullscreenChange = () => {
+      if (!document.fullscreenElement) {
+        fullscreenExited = true;
+      }
+    };
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+    t.add_cleanup(() => document.removeEventListener('fullscreenchange', onFullscreenChange));
+
+    // 3. Send close request
+    await sendCloseRequest();
+    await waitForPotentialCloseEvent();
+    await new Promise(resolve => t.step_timeout(resolve, 100));
+
+    // 4. Assertions
+    assert_true(fullscreenExited, "Fullscreen should have exited");
+    assert_equals(document.fullscreenElement, null, "Fullscreen should be fully exited");
+    assert_array_equals(events, [], `${type} should not receive close request because fullscreen took precedence`);
+  }, `Close request exits fullscreen, taking precedence over ${type}`);
+}
+</script>

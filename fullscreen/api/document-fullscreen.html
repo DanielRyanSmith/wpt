@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Document#fullscreen</title>
+<link rel="help" href="https://fullscreen.spec.whatwg.org/">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="/resources/testdriver.js"></script>
+<script src="/resources/testdriver-vendor.js"></script>
+<script src="../trusted-click.js"></script>
+<body>
+<script>
+promise_test(async function(t) {
+  const div = document.createElement("div");
+  document.body.appendChild(div);
+  t.add_cleanup(() => div.remove());
+
+  assert_equals(document.fullscreenElement, null, "fullscreenElement should initially be null");
+  assert_false(document.fullscreen, "document.fullscreen must be false when fullscreenElement is null");
+
+  await Promise.all([trusted_request(div), fullScreenChange()]);
+
+  assert_equals(document.fullscreenElement, div, "fullscreenElement should be the div after entering fullscreen");
+  assert_true(document.fullscreen, "document.fullscreen must be true when fullscreenElement is not null");
+
+  const exitPromise = document.exitFullscreen();
+  await Promise.all([exitPromise, fullScreenChange()]);
+
+  assert_equals(document.fullscreenElement, null, "fullscreenElement should be null after exiting fullscreen");
+  assert_false(document.fullscreen, "document.fullscreen must be false when fullscreenElement is null");
+
+}, "document.fullscreen must return true if document.fullscreenElement is not null, and false otherwise");
+</script>
